@@ -1,36 +1,13 @@
 from flask import Flask, render_template, request
-from flask_sqlalchemy import SQLAlchemy
 from sample_book_data.bookData import Books
 from sample_book_data.genreData import Genres
-# from db_connector import connect_to_database, execute_query
+from db_connector.db_connector import connect_to_database, execute_query
 import MySQLdb as mariadb
 
 Books = Books()
 Genres = Genres()
 
 app = Flask(__name__)
-
-# # need to pass app?
-# def connect_to_database():
-#     print('establishing database connection!')
-#     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-#     app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://cxeqsk4416lwhuri:ch4at87dhgpuv005@spvunyfm598dw67v.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/e17gpbo1zl8mbfi9"
-#     db_connection = SQLAlchemy(app)
-#     if (db_connection):
-#         print ('got a connection!')
-#         print (' db_connection')
-# #
-# sql = text('select name from penguins')
-# result = db.engine.execute(sql)
-# names = [row[0] for row in result]
-# print names
-#
-#     connection = engine.connect()
-#     result = connection.execute("select username from users")
-#     for row in result:
-#         print("username:", row['username'])
-#     connection.close()
-
 
 @app.route('/')
 def index():

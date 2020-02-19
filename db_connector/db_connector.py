@@ -1,18 +1,11 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+import MySQLdb as mariadb
 from db_credentials import host, user, passwd, db
-
-#
-# app = Flask(__name__)
-# app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///example.sqlite"
-# db = SQLAlchemy(app)
 
 def connect_to_database(host = host, user = user, passwd = passwd, db = db):
     '''
     connects to a database and returns a database objects
     '''
-    db_connection = SQLAlchemy.config(mysql://cxeqsk4416lwhuri:ch4at87dhgpuv005@spvunyfm598dw67v.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/e17gpbo1zl8mbfi9)
-    # db_connection = SQLAlchemy(host,user,passwd,db)
+    db_connection = mariadb.connect(host,user,passwd,db)
     return db_connection
 
 def execute_query(db_connection = None, query = None, query_params = ()):
@@ -55,7 +48,7 @@ def execute_query(db_connection = None, query = None, query_params = ()):
 if __name__ == '__main__':
     print("Executing a sample query on the database using the credentials from db_credentials.py")
     db = connect_to_database()
-    query = "SELECT * from Books;"
+    query = "SELECT * from bsg_people;"
     results = execute_query(db, query);
     print("Printing results of %s" % query)
 
