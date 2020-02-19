@@ -1,13 +1,9 @@
 from flask import Flask, render_template, request
-import mysql.connector as jawsdb
 from sample_book_data.bookData import Books
 from sample_book_data.genreData import Genres
+import db_connector
+# from db_connector import connect_to_database, execute_query
 
-
-#!/usr/bin/python
-# https://mariadb.com/resources/blog/how-to-connect-python-programs-to-mariadb/
-jawsdb_connection = jawsdb.connect(host='spvunyfm598dw67v.cbetxkdyhwsb.us-east-1.rds.amazonaws.com', user='cxeqsk4416lwhuri', password='ch4at87dhgpuv005', database='e17gpbo1zl8mbfi9')
-cursor = jawsdb_connection.cursor()
 
 Books = Books()
 Genres = Genres()
