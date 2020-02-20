@@ -7,24 +7,20 @@ from flask import Flask, Response, render_template
 
 from sample_book_data.bookData import Books
 from sample_book_data.genreData import Genres
+
 Books = Books()
 Genres = Genres()
 
 @app.route('/books')
 def books():
-	conn = None
-	cursor = None
-	try:
-		conn = mysql.connect()
-		cursor = conn.cursor(pymysql.cursors.DictCursor)
-		cursor.execute("SELECT * FROM Books")
-		result = cursor.fetchall()
-    	return render_template('books.html', rows=result)
-	except Exception as e:
-		print(e)
-	finally:
-		cursor.close()
-		conn.close()
+	connection = mysql.connect()
+	cursor = connection.cursor()
+	select_stmt = "SELECT * FROM Books"
+	cursor.execute(select_stmt)
+	result = cursor.fetchall()
+	cursor.close()
+	connection.close()
+	return render_template('books.html', rows=result)
 
 @app.route('/')
 def download():
