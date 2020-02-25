@@ -29,44 +29,12 @@ def books():
 def book(isbn):
 	connection = mysql.connect()
 	cursor = connection.cursor()
-	# select_stmt = "SELECT Books.isbn, Books.book_title, Books.year_published, Books.book_description, Authors.author_name, Genres.genre_name FROM Books JOIN Authors ON Books.author_id = Authors.author_id JOIN Genres ON Books.genre_id = Genres.genre_id WHERE isbn = %(isbn)s;"
-	# cursor.execute(select_stmt, { 'isbn': isbn })
-	select_stmt = "SELECT Books.isbn, Books.book_title, Books.year_published, Books.book_description, Authors.author_name, Genres.genre_name FROM Books JOIN Authors ON Books.author_id = Authors.author_id JOIN Genres ON Books.genre_id = Genres.genre_id WHERE isbn = " + isbn
+	select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
 	cursor.execute(select_stmt)
 	result = cursor.fetchall()
 	cursor.close()
 	connection.close()
 	return render_template('book.html', book=result)
-
-# @app.route('/download/report/csv')
-# def download_report():
-# 	conn = None
-# 	cursor = None
-# 	try:
-# 		conn = mysql.connect()
-# 		cursor = conn.cursor(pymysql.cursors.DictCursor)
-#
-# 		cursor.execute("SELECT emp_id, emp_first_name, emp_last_name, emp_designation FROM employee")
-# 		result = cursor.fetchall()
-#
-# 		output = io.StringIO()
-# 		writer = csv.writer(output)
-#
-# 		line = ['Emp Id, Emp First Name, Emp Last Name, Emp Designation']
-# 		writer.writerow(line)
-#
-# 		for row in result:
-# 			line = [str(row['emp_id']) + ',' + row['emp_first_name'] + ',' + row['emp_last_name'] + ',' + row['emp_designation']]
-# 			writer.writerow(line)
-#
-# 		output.seek(0)
-#
-# 		return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=employee_report.csv"})
-# 	except Exception as e:
-# 		print(e)
-# 	finally:
-# 		cursor.close()
-# 		conn.close()
 
 if __name__ == "__main__":
     app.run()
