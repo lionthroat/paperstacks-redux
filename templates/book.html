@@ -1,6 +1,5 @@
 <!--This page currently receives array 'book' with information in the following indices: -->
 <!-- [isbn, book_title, year_published, book_description, author_name, genre_name] -->
-<!-- [ 0,       1,           2,                3,             4,           5] -->
 <!-- This may need additional logic to display multiple authors -->
 {% extends 'layout.html' %}
 
@@ -13,13 +12,13 @@
         </div>
       </div>
       <div class="col">
-        <h3 class="subheader"> {{ book[1] }} </h3>
-        <p>by {{ book[4] }}</p>
-        <p><b>Genre:</b> {{ book[5] }}<br>
-        <b>Year Published:</b> {{book[2] }}<br>
-          <b>ISBN:</b> {{ book.0 }}
+        <h3 class="subheader"> {{ book['book_title'] }} </h3>
+        <p>by {{ book['author_name'] }}</p>
+        <p><b>Genre:</b> {{ book['genre_name'] }}<br>
+        <b>Year Published:</b> {{book['year_published'] }}<br>
+          <b>ISBN:</b> {{ book['isbn'] }}
         </p>
-        <p> {{ book[3] }}</p>
+        <p> {{ book['book_description'] }}</p>
         <div>
           <button id="edit-book-button" class="btn btn-primary mx-2">Edit Book</button>
           <button id="rem-book-button" class="btn btn-primary mx-2">Remove Book</button>

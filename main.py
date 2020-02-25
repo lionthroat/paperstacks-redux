@@ -7,14 +7,31 @@ from flask import Flask, Response, render_template
 
 @app.route('/')
 def index():
-    # Want to implement this... how?
+    # Want to implement counting books per genre... might need separate SQL for this?
     BooksPerGenre = []
-    return render_template('home.html', genres=Genres, books=Books, count=BooksPerGenre)
+	connection = mysql.connect()
+	cursor = connection.cursor(pymysql.cursors.DictCursor)
+    # query 1
+    select_stmt = "select * from Genres;"
+	cursor.execute(select_stmt)
+	GenresSQL = cursor.fetchall()
+    # query 2
+	select_stmt = "select * from Books;"
+	cursor.execute(select_stmt)
+	BooksSQL = cursor.fetchall()
+    # query 3
+	select_stmt = "select * from Authors;"
+	cursor.execute(select_stmt)
+	AuthorsSQL = cursor.fetchall()
+
+	cursor.close()
+	connection.close()
+    return render_template('home.html', genres=GenresSQL, books=BooksSQL, authors=AuthorsSQL, count=BooksPerGenre)
 
 @app.route('/books')
 def books():
 	connection = mysql.connect()
-	cursor = connection.cursor()
+	cursor = connection.cursor(pymysql.cursors.DictCursor)
 	select_stmt = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id order by book.book_title ASC;"
      # Note 1: might need to group by author once we implement multiple authors
      # Note 2: must select isbn here even though it's not displayed, as it's used to create

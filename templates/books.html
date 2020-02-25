@@ -11,9 +11,9 @@
     <ul class="list-group">
       {% for book in books %}
         <li class="list-group-item">
-          <a href="book/{{ book.0 }}"><img src="../static/book-img.png" alt={{ book[1] }} height="42" width="42"></a>
-          <a href="book/{{ book.0 }}">{{ book[1] }}</a>
-          by {{ book[2] }}
+          <a href="book/{{ book['isbn'] }}"><img src="../static/book-img.png" alt={{ book['book_title'] }} height="42" width="42"></a>
+          <a href="book/{{ book['isbn'] }}">{{ book['book_title'] }}</a>
+          by {{ book['author_name'] }}
         </li>
       {% endfor %}
     </ul>
