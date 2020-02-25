@@ -9,13 +9,13 @@
         </div>
       </div>
       <div class="col">
-        <h3 class="subheader"> {{book.title}} </h3>
-        <p>by {{book.author}}</p>
-        <p><b>Genre:</b> {{book.genre}}<br>
-        <b>Year Published:</b> {{book.year_published}}<br>
-          <b>ISBN:</b> {{book.isbn}}
+        <h3 class="subheader"> {{ book[1] }} </h3>
+        <p>by {{ book[4] }}</p>
+        <p><b>Genre:</b> {{ book[5] }}<br>
+        <b>Year Published:</b> {{book[2] }}<br>
+          <b>ISBN:</b> {{ book.0 }}
         </p>
-        <p> {{book.blurb}}</p>
+        <p> {{ book[3] }}</p>
         <div>
           <button id="edit-book-button" class="btn btn-primary mx-2">Edit Book</button>
           <button id="rem-book-button" class="btn btn-primary mx-2">Remove Book</button>

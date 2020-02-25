@@ -1,20 +1,21 @@
+<!--This page currently receives array 'books' with information in the following indices: -->
+<!-- [isbn, book_title, author_name] -->
 {% extends 'layout.html' %}
 
 {% block body %}
 
   <div class="container mt-5 mb-5">
     <h4 class="name">Books</h4>
-    <div class="row">
-      <div class="col">isbn</div>
-      <div class="col">book_title</div>
-    </div>
-    {% for r in rows %}
-      <div class="row">
-        <div class="col">{{ r.0 }}</div>
-        <div class="col">{{ r[1] }}</div>
-      </div>
-    {% endfor %}
 
+    <ul class="list-group">
+      {% for book in books %}
+        <li class="list-group-item">
+          <a href="book/{{ book.0 }}"><img src="../static/book-img.png" alt={{ book[1] }} height="42" width="42"></a>
+          <a href="book/{{ book.0 }}">{{ book[1] }}</a>
+          by {{ book[2] }}
+        </li>
+      {% endfor %}
+    </ul>
   </div>
 
 {% endblock %}
