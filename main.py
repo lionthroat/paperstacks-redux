@@ -1,32 +1,38 @@
 import io
 import csv
 import pymysql
+import pymysql.cursors
 from app import app
 from db import mysql
 from flask import Flask, Response, render_template
+
+# alternative to importing from db.py
+# con = pymysql.connect(host='.',
+#         user='.',
+#         password='.',
+#         db='.',
+#         charset='utf8mb4',
+#         cursorclass=pymysql.cursors.DictCursor)
 
 @app.route('/')
 def index():
     # Want to implement counting books per genre... might need separate SQL for this?
     BooksPerGenre = []
-	connection = mysql.connect()
-	cursor = connection.cursor(pymysql.cursors.DictCursor)
-    # query 1
-    select_stmt = "select * from Genres;"
-	cursor.execute(select_stmt)
-	GenresSQL = cursor.fetchall()
-    # query 2
-	select_stmt = "select * from Books;"
-	cursor.execute(select_stmt)
-	BooksSQL = cursor.fetchall()
-    # query 3
-	select_stmt = "select * from Authors;"
-	cursor.execute(select_stmt)
-	AuthorsSQL = cursor.fetchall()
+    connection = mysql.connect()
+    cursor = connection.cursor()
 
-	cursor.close()
-	connection.close()
-    return render_template('home.html', genres=GenresSQL, books=BooksSQL, authors=AuthorsSQL, count=BooksPerGenre)
+    # query 1: get genre data for left sidebar links
+    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+    cursor.execute(select_stmt)
+    GenresSQL = cursor.fetchall()
+
+    # query 2: get featured book data (maybe there is a way to randomize this?)
+    select_book = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id WHERE book.book_title = 'Electric Arches';"
+    cursor.execute(select_book)
+    featuredBookSQL = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('home.html', genres=GenresSQL, featured=featuredBookSQL, count=BooksPerGenre)
 
 @app.route('/books')
 def books():
