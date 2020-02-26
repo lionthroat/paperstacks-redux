@@ -1,3 +1,4 @@
+<!-- Receives dictionary 'books' with keys [isbn, book_title] -->
 {% extends 'layout.html' %}
 
 {% block body %}
@@ -9,7 +10,7 @@
         <label for="user-book-review">Book Title</label>
         <select class="form-control" id="user-book-review">
           {% for book in books %}
-          <option value="{{book.id}}">{{book.title}}</option>
+          <option value="{{ book['isbn'] }}">{{ book['book_title'] }}</option>
           {% endfor %}
         </select>
       </div>

@@ -110,6 +110,17 @@ def genre(id):
 def add_genre():
     return render_template('add_genre.html')
 
+@app.route('/add_review')
+def add_review():
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
+    cursor.execute(select_stmt)
+    result = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('add_review.html', books=result)
+
 @app.route('/search')
 def search():
     connection = mysql.connect()
