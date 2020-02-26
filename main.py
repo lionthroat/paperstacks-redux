@@ -63,6 +63,17 @@ def add_book():
     connection.close()
     return render_template('add_book.html', genres=GenresSQL)
 
+@app.route('/add_author')
+def add_author():
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
+    cursor.execute(select_stmt)
+    result = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('add_author.html', books=result)
+
 @app.route('/genres')
 def genres():
     # query 1: get genre data for list
