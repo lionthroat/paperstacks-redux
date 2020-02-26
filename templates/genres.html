@@ -11,7 +11,7 @@
     <ul class="list-group">
       {% for genre in genres %}
         <li class="list-group-item">
-          <h5><a href="genre/{{ genre['id'] }}"> {{ genre['genre_name'] }} </a></h5>
+          <h5><a href="genre/{{ genre['genre_id'] }}"> {{ genre['genre_name'] }} </a></h5>
           {% set gid = genre['genre_id'] %}
           {% for book in books %}
             {% if gid == book['genre_id'] %}
