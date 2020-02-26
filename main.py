@@ -33,7 +33,7 @@ def books():
 	connection = mysql.connect()
 	cursor = connection.cursor(pymysql.cursors.DictCursor)
 	select_stmt = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id order by book.book_title ASC;"
-     # Note 1: might need to group by author once we implement multiple authors
+     # Note 1: might need to group by book title once we have books with multiple authors?
      # Note 2: must select isbn here even though it's not displayed, as it's used to create the unique URL for each book page.
 	cursor.execute(select_stmt)
 	result = cursor.fetchall()
@@ -51,6 +51,17 @@ def book(isbn):
 	cursor.close()
 	connection.close()
 	return render_template('book.html', bookresult=result)
+
+@app.route('/add_book')
+def add_book():
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+    cursor.execute(select_stmt)
+    GenresSQL = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('add_book.html', genres=GenresSQL)
 
 @app.route('/genres')
 def genres():
