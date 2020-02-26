@@ -84,6 +84,10 @@ def genre(id):
     connection.close()
     return render_template('genre.html', genreinfo=result)
 
+@app.route('/add_genre')
+def add_genre():
+    return render_template('add_genre.html')
+
 @app.route('/search')
 def search():
     connection = mysql.connect()

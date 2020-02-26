@@ -152,6 +152,11 @@
 	background-color: #cfe8e4;
 }
 
+.genre-box {
+	padding: 20px;
+	width: 450px;
+}
+
 /*Add Book Styles*/
 .dropdown-content {
 	display:none;
