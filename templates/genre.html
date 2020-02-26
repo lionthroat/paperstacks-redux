@@ -5,7 +5,7 @@
 {% block body %}
 
   <div class="container mt-5 mb-5">
-    <h4 class="name">Genre: {{ genreinfo[0]['genre_name']}}
+    <h4 class="name">Genre: {{ genreinfo[0]['genre_name'] }}
     <div class="mt-3">
       <ul>
       {% for item in genreinfo %}
@@ -15,7 +15,9 @@
     </div>
     <div>
       <button id="edit-genre-button" class="btn btn-primary mx-2 mt-2">Edit Genre</button>
-      <button id="rem-genre-button" class="btn btn-primary mx-2 mt-2">Remove Genre</button>
+      <form id="rem-genre" action="/rem_genre/{{ genreinfo[0]['genre_id'] }}" method="post">
+        <button type="submit" id="rem-genre-button" class="btn btn-primary mx-2 mt-2">Remove Genre</button>
+      </form>
     </div>
   </div>
 

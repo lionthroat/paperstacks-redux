@@ -5,19 +5,20 @@ import pymysql.cursors
 from app import app
 from db import mysql
 from flask import Flask, Response, render_template
+from flask import request, redirect
 
 @app.route('/')
 def index():
     # query 1: get genre data for left sidebar links
     connection = mysql.connect()
     cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre order by genre.genre_name;"
     cursor.execute(select_stmt)
     GenresSQL = cursor.fetchall()
     cursor.close()
     connection.close()
 
-    # query 2: get featured book data (maybe there is a way to randomize this?)
+    # query 2: get featured book data (NOTE: maybe there is a way to randomize this?)
     connection = mysql.connect()
     cursor = connection.cursor(pymysql.cursors.DictCursor)
     select_book = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id WHERE book.book_title = 'Electric Arches';"
@@ -95,6 +96,7 @@ def genres():
     connection.close()
     return render_template('genres.html', genres=GenresSQL, books=BooksSQL)
 
+# NOTE!!! Bug with this routing logic: it will only display genres for which there are books. This means you can't delete genres that have no books, which is a problem. Because of that, I haven't been able to test deleting genres yet.
 @app.route('/genre/<string:id>/')
 def genre(id):
     connection = mysql.connect()
@@ -106,9 +108,49 @@ def genre(id):
     connection.close()
     return render_template('genre.html', genreinfo=result)
 
-@app.route('/add_genre')
+@app.route('/add_genre', methods=['POST','GET'])
 def add_genre():
-    return render_template('add_genre.html')
+    if request.method == 'GET':
+        return render_template('add_genre.html')
+
+    elif request.method == 'POST':
+        # query 1: get max PK value of genre_id
+        # NOTE: idk if there is a way to actually do "auto increment" or if we have to do it this way??
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        query = "SELECT MAX(Genres.genre_id) FROM Genres"
+        cursor.execute(query)
+        result = cursor.fetchall()
+        genre_id = result[0]['MAX(Genres.genre_id)']
+        genre_id += 1
+        cursor.close()
+        connection.close()
+
+        # query 2: insert new value to Genres
+        # NOTE: this function doesn't check to make sure a genre with same name isn't already in database!!
+        genre_name = request.form['genre_name']
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        query = 'INSERT INTO Genres (genre_id, genre_name) VALUES (%s,%s)'
+        values = (genre_id, genre_name)
+        print("Values to be inserted are: ", values)
+        cursor.execute(query, values)
+        connection.commit() # NOTE: entry will not be inserted w/o this
+        cursor.close()
+        connection.close()
+        return ('Genre added!'); # NOTE: :( not a pretty page that displays, needs to redisplay regular website
+
+@app.route('/rem_genre/<string:id>/', methods=['POST'])
+# NOTE: I'm absolutely unsure what happens when you try to delete a genre that still has books associated with it
+def rem_genre(id):
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    query = "DELETE FROM Genres WHERE Genres.genre_id = " + id
+    cursor.execute(query)
+    connection.commit() # NOTE: entry will not be removed w/o this
+    cursor.close()
+    connection.close()
+    return ('Genre removed!'); # NOTE: :( not a pretty page, needs to redisplay regular website
 
 @app.route('/add_review')
 def add_review():
