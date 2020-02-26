@@ -29,15 +29,14 @@ def index():
     # NOT WORKING!!!! Not sure why.
     # query 2: get featured book data (maybe there is a way to randomize this?)
     connection = mysql.connect()
-    cursor = connection.cursor()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
     select_book = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id WHERE book.book_title = 'Electric Arches';"
     cursor.execute(select_book)
     featuredBookSQL = cursor.fetchall()
-    print(featuredBookSQL)
     cursor.close()
     connection.close()
 
-    return render_template('home.html', genres=GenresSQL, featured=featuredBookSQL)
+    return render_template('home.html', genres=GenresSQL, featuredbooks=featuredBookSQL)
 
 @app.route('/books')
 def books():

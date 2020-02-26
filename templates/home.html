@@ -1,7 +1,5 @@
-<!--This page receives 'genres' -->
-<!-- [genre_id, genre_name] -->
-<!-- And 'featured' -->
-<!-- ['isbn', 'book_title', 'year_published', 'book_description', 'author_name', 'genre_name'] -->
+<!--This page receives 'genres' [genre_id, genre_name] -->
+<!-- And 'featuredbooks' ['isbn', 'book_title', 'year_published', 'book_description', 'author_name', 'genre_name'] -->
 {% extends 'layout.html' %}
 
 {% block body %}
@@ -26,14 +24,18 @@
             <img src="../static/electric-arches.jpg">
           </div>
 
-          <div class="col">
-            <div class="custom-featured-book-title mt-4">{{ featured[2] }}</div>
-            <div class="custom-featured-book-author">by {{ featured[4] }}</div>
-            <div class="custom-featured-book-year"><b>Published:</b> {{ featured[2] }}</div>
-            <div class="custom-featured-book-genre"><b>Genre:</b> {{ featured[5] }}</div>
-            <div class="custom-featured-book-blurb lead">{{ featured[3] }}</div>
-          </div>
+          {% for book in featuredbooks %}
 
+          <div class="col">
+            <div class="custom-featured-book-title mt-4"> {{ book['book_title'] }}</div>
+            <div class="custom-featured-book-author">by {{ book['author_name']}}</div>
+            <div class="custom-featured-book-year"><b>Published:</b> {{ book['year_published'] }}</div>
+            <div class="custom-featured-book-genre"><b>Genre:</b> {{ book['genre_name'] }}</div>
+          </div>
+          <div class="col">
+            <div class="custom-featured-book-blurb lead"> {{ book['book_description'] }} </div>
+          </div>
+          {% endfor %}
         </div>
         <div class="row custom-feature  mt-3">
           <h4 class="name">Search for Books...</h4>
