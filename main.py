@@ -52,5 +52,29 @@ def book(isbn):
 	connection.close()
 	return render_template('book.html', bookresult=result)
 
+@app.route('/genres')
+def genres():
+    # query 1: get genre data for list
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+    cursor.execute(select_stmt)
+    GenresSQL = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    # query 2: get books data to list books in each genre category
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select book.isbn, book.book_title, gb.genre_id FROM Books book JOIN Genres_Books gb ON gb.isbn = book.isbn"
+    cursor.execute(select_stmt)
+    BooksSQL = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('genres.html', genres=GenresSQL, books=BooksSQL)
+
+# @app.route('/genre/<string:id>/')
+# def genre(id):
+#     return render_template('genre.html', id=int(id), genres=Genres, books=Books)
 if __name__ == "__main__":
     app.run()
