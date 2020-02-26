@@ -84,6 +84,17 @@ def genre(id):
     connection.close()
     return render_template('genre.html', genreinfo=result)
 
+@app.route('/search')
+def search():
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+    cursor.execute(select_stmt)
+    GenresSQL = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('search.html', genres=GenresSQL)
+
 @app.route('/about')
 def about():
     return render_template('about.html')
@@ -95,6 +106,6 @@ def privacy():
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
-    
+
 if __name__ == "__main__":
     app.run()
