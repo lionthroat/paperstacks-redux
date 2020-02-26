@@ -1,4 +1,4 @@
-<!--This page currently receives array 'book' with information in the following indices: -->
+<!-- This page receives a dictionary 'bookresult' with keys: -->
 <!-- [isbn, book_title, year_published, book_description, author_name, genre_name] -->
 <!-- This may need additional logic to display multiple authors -->
 {% extends 'layout.html' %}
@@ -12,13 +12,16 @@
         </div>
       </div>
       <div class="col">
-        <h3 class="subheader"> {{ book['book_title'] }} </h3>
-        <p>by {{ book['author_name'] }}</p>
-        <p><b>Genre:</b> {{ book['genre_name'] }}<br>
-        <b>Year Published:</b> {{book['year_published'] }}<br>
-          <b>ISBN:</b> {{ book['isbn'] }}
-        </p>
-        <p> {{ book['book_description'] }}</p>
+        {% for book in bookresult %}
+          <h3 class="subheader"> {{ book['book_title'] }} </h3>
+          <p>by {{ book['author_name'] }}</p>
+          <p><b>Genre:</b> {{ book['genre_name'] }}<br>
+          <b>Year Published:</b> {{book['year_published'] }}<br>
+            <b>ISBN:</b> {{ book['isbn'] }}
+          </p>
+          <p> {{ book['book_description'] }}</p>
+        {% endfor %}
+        
         <div>
           <button id="edit-book-button" class="btn btn-primary mx-2">Edit Book</button>
           <button id="rem-book-button" class="btn btn-primary mx-2">Remove Book</button>
