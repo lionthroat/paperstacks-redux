@@ -33,9 +33,8 @@ def index():
 def books():
 	connection = mysql.connect()
 	cursor = connection.cursor(pymysql.cursors.DictCursor)
-	select_stmt = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id order by book.book_title ASC;"
-     # Note 1: might need to group by book title once we have books with multiple authors?
-     # Note 2: must select isbn here even though it's not displayed, as it's used to create the unique URL for each book page.
+	select_stmt = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id group by book.isbn order by book.book_title ASC;"
+    # Note: groups by isbn so books with multiple authors only display once, however, only one author is shown.
 	cursor.execute(select_stmt)
 	result = cursor.fetchall()
 	cursor.close()
@@ -64,17 +63,60 @@ def add_book():
     connection.close()
     return render_template('add_book.html', genres=GenresSQL)
 
-@app.route('/add_author')
+@app.route('/add_author', methods=['POST','GET'])
 def add_author():
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
-    cursor.execute(select_stmt)
-    result = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return render_template('add_author.html', books=result)
+    if request.method == 'GET':
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        select_stmt = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
+        cursor.execute(select_stmt)
+        result = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return render_template('add_author.html', books=result)
 
+    elif request.method == 'POST':
+        # Operation 1: Query to get max PK value of author_id
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        query = "SELECT MAX(Authors.author_id) FROM Authors"
+        cursor.execute(query)
+        result = cursor.fetchall()
+        author_id = result[0]['MAX(Authors.author_id)']
+        author_id += 1
+        cursor.close()
+        connection.close()
+
+        # Operation 2: Fetch Author information from form
+        author_name = request.form['author_name']
+        author_description = request.form['author_description']
+        isbn = request.form['author_book']
+
+        # Operation 3: Insert new Authors entry
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        query = 'INSERT INTO Authors (author_id, author_name, author_description) VALUES (%s,%s,%s)'
+        values = (author_id, author_name, author_description)
+        print("Values to be inserted are: ", values)
+        cursor.execute(query, values)
+        connection.commit() # NOTE: entry will not be inserted w/o this
+        cursor.close()
+        connection.close()
+
+        # Operation 4: Insert Books_Authors entry to link new Author to Book
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s,%s)'
+        values = (isbn, author_id)
+        print("Values to be inserted are: ", values)
+        cursor.execute(query, values)
+        connection.commit() # NOTE: entry will not be inserted w/o this
+        cursor.close()
+        connection.close()
+
+        return ('Author added!'); # NOTE: :( not a pretty page that displays, needs to redisplay regular website
+
+#################################
 @app.route('/genres')
 def genres():
     # query 1: get genre data for list
