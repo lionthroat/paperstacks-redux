@@ -63,6 +63,28 @@ def add_book():
     connection.close()
     return render_template('add_book.html', genres=GenresSQL)
 
+@app.route('/authors')
+def authors():
+	connection = mysql.connect()
+	cursor = connection.cursor(pymysql.cursors.DictCursor)
+	select_stmt = "select Authors.author_name, Authors.author_id from Authors order by Authors.author_name ASC;"
+	cursor.execute(select_stmt)
+	result = cursor.fetchall()
+	cursor.close()
+	connection.close()
+	return render_template('authors.html', authors=result)
+
+@app.route('/author/<string:author_id>/')
+def author(author_id):
+	connection = mysql.connect()
+	cursor = connection.cursor(pymysql.cursors.DictCursor)
+	select_stmt = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn where auth.author_id = " + author_id
+	cursor.execute(select_stmt)
+	result = cursor.fetchall()
+	cursor.close()
+	connection.close()
+	return render_template('author.html', author=result)
+
 @app.route('/add_author', methods=['POST','GET'])
 def add_author():
     if request.method == 'GET':
