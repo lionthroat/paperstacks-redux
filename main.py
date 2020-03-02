@@ -52,16 +52,73 @@ def book(isbn):
 	connection.close()
 	return render_template('book.html', bookresult=result)
 
-@app.route('/add_book')
+@app.route('/add_book', methods=['POST','GET'])
 def add_book():
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
-    cursor.execute(select_stmt)
-    GenresSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return render_template('add_book.html', genres=GenresSQL)
+    if request.method == 'GET':
+        # Get Genres information
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+        cursor.execute(select_stmt)
+        GenresSQL = cursor.fetchall()
+        cursor.close()
+        connection.close()
+
+        # Get Current Authors information
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        select_stmt = "select auth.author_id, auth.author_name from Authors auth;"
+        cursor.execute(select_stmt)
+        AuthorsSQL = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return render_template('add_book.html', genres=GenresSQL, authors=AuthorsSQL)
+
+    elif request.method == 'POST':
+        # Operation 1: Fetch Book information from form
+        book_title = request.form['book_title']
+        isbn = request.form['book_isbn']
+        year_published = request.form['book_year']
+        book_description = request.form['book_description']
+        genres = request.form.getlist('book_genre')
+        author_ids = request.form.getlist('book_author')
+
+        # Operation 2: Insert new Book
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        query = 'INSERT INTO Books (isbn, book_title, year_published, book_description) VALUES (%s,%s,%s,%s)'
+        values = (isbn, book_title, year_published, book_description)
+        print("Values to be inserted to Book are: ", values)
+        cursor.execute(query, values)
+        connection.commit() # NOTE: entry will not be inserted w/o this
+        cursor.close()
+        connection.close()
+
+        # Operation 3: If needed, insert one or more Books_Authors entries
+        for author_id in author_ids:
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s,%s)'
+            values = (isbn, author_id)
+            print("Values to be inserted to Books_Authors are: ", values)
+            cursor.execute(query, values)
+            connection.commit() # NOTE: entry will not be inserted w/o this
+            cursor.close()
+            connection.close()
+
+        # Operation 4: Insert one or more Genres_Books entries
+        for genre_id in genres:
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            query = 'INSERT INTO Genres_Books (isbn, genre_id) VALUES (%s,%s)'
+            values = (isbn, genre_id)
+            print("Values to be inserted to Genres_Books are: ", values)
+            cursor.execute(query, values)
+            connection.commit() # NOTE: entry will not be inserted w/o this
+            cursor.close()
+            connection.close()
+
+        return ('Book added!');
 
 @app.route('/authors')
 def authors():
