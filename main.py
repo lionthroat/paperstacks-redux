@@ -44,14 +44,25 @@ def books():
 
 @app.route('/book/<string:isbn>/')
 def book(isbn):
+    # Fetch Book's information
 	connection = mysql.connect()
 	cursor = connection.cursor(pymysql.cursors.DictCursor)
 	select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
 	cursor.execute(select_stmt)
-	result = cursor.fetchall()
+	BookSQL = cursor.fetchall()
 	cursor.close()
 	connection.close()
-	return render_template('book.html', bookresult=result)
+
+    # Fetch Book's Ratings and Reviews
+	connection = mysql.connect()
+	cursor = connection.cursor(pymysql.cursors.DictCursor)
+	select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = book.isbn where book.isbn = " + isbn
+	cursor.execute(select_stmt)
+	ReviewSQL = cursor.fetchall()
+	cursor.close()
+	connection.close()
+
+	return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL)
 
 @app.route('/add_book', methods=['POST','GET'])
 def add_book():

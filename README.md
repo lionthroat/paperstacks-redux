@@ -3,6 +3,7 @@
 
 ### Known Bugs:
 - Links to Book pages from an Author page aren't working. The routing is set to 'book/<isbn>' but when you're on an Author's page, you're already at 'author/<author_id>', so it just appends that to the relative URL and ends up looking like 'author/121/book/393354377', which breaks.
+- Reviews/Ratings displaying twice each on Book pages. Issue with SQL?
 - Bug with Genre pages: it will only display single Genre pages for which there are at least one Book. This means you can't delete genres that have no books, which is a problem. Because of that, I haven't been able to test deleting genres yet.
 
 ### Still Needs to be Built Out:
