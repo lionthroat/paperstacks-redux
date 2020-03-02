@@ -1,4 +1,5 @@
 import io
+import time
 import csv
 import pymysql
 import pymysql.cursors
@@ -195,7 +196,6 @@ def add_author():
 
         return ('Author added!'); # NOTE: :( not a pretty page that displays, needs to redisplay regular website
 
-#################################
 @app.route('/genres')
 def genres():
     # query 1: get genre data for list
@@ -217,7 +217,7 @@ def genres():
     connection.close()
     return render_template('genres.html', genres=GenresSQL, books=BooksSQL)
 
-# NOTE!!! Bug with this routing logic: it will only display genres for which there are books. This means you can't delete genres that have no books, which is a problem. Because of that, I haven't been able to test deleting genres yet.
+# NOTE!!! Bug with this routing logic: it will only display genres for which there are books.
 @app.route('/genre/<string:id>/')
 def genre(id):
     connection = mysql.connect()
@@ -273,16 +273,86 @@ def rem_genre(id):
     connection.close()
     return ('Genre removed!'); # NOTE: :( not a pretty page, needs to redisplay regular website
 
-@app.route('/add_review')
+@app.route('/add_review', methods=['POST','GET'])
 def add_review():
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
-    cursor.execute(select_stmt)
-    result = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return render_template('add_review.html', books=result)
+    if request.method == 'GET':
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        select_stmt = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
+        cursor.execute(select_stmt)
+        result = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return render_template('add_review.html', books=result)
+
+    elif request.method == 'POST':
+        # Step 1: Need new rating_id PK
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        query = "SELECT MAX(Ratings.rating_id) FROM Ratings"
+        cursor.execute(query)
+        result = cursor.fetchall()
+        rating_id = result[0]['MAX(Ratings.rating_id)']
+        rating_id += 1
+        cursor.close()
+        connection.close()
+
+        # Step 2: Fetch form info for Rating
+        isbn = request.form['author_book']
+        star_rating = request.form['user_rating']
+        rating_date = time.strftime('%Y-%m-%d')
+
+        # Step 3: Insert Rating
+        # Note: review_id is initially disregarded as a foreign key to avoid insert errors, will be added in after the fact if needed. No need to initialize to NULL or anything, it will be assumed if no value is provided, it is automatically NULL.
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        query = 'INSERT INTO Ratings (rating_id, isbn, star_rating, rating_date) VALUES (%s,%s,%s,%s)'
+        values = (rating_id, isbn, star_rating, rating_date)
+        print("Values to be inserted into Ratings are: ", values)
+        cursor.execute(query, values)
+        connection.commit() # Note: if you comment this out, the Rating will not actually be added to the database, which will cause errors in all subsequent insertions/updates for this function
+        cursor.close()
+        connection.close()
+
+        # Step 4: If Review not empty...
+        if request.form['user_review'] != '':
+            # 4a. First, need a new review_id PK for our new Review entry
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            query = "SELECT MAX(Reviews.review_id) FROM Reviews"
+            cursor.execute(query)
+            result = cursor.fetchall()
+            review_id = result[0]['MAX(Reviews.review_id)']
+            review_id += 1
+            cursor.close()
+            connection.close()
+
+            # 4b. Second, fetch Review info from form and system
+            review_content = request.form['user_review']
+            review_date = time.strftime('%Y-%m-%d')
+
+            # 4c. Connect to database and add Review
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            query = 'INSERT INTO Reviews (review_id, rating_id, isbn, review_content, review_date) VALUES (%s,%s,%s,%s,%s)'
+            values = (review_id, rating_id, isbn, review_content, review_date)
+            print("Values to be inserted into Reviews are: ", values)
+            cursor.execute(query, values)
+            connection.commit()
+            cursor.close()
+            connection.close()
+
+            # 4d. Last, update the Rating we inserted above with FK review_id
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            query = 'UPDATE Ratings set review_id = %s WHERE rating_id = %s'
+            values = (review_id, rating_id)
+            print("Values to be updated into Ratings are: ", values)
+            cursor.execute(query, values)
+            connection.commit()
+            cursor.close()
+            connection.close()
+        return ('Thank you for your rating/review!');
 
 @app.route('/search')
 def search():

@@ -6,6 +6,8 @@
 - Bug with Genre pages: it will only display single Genre pages for which there are at least one Book. This means you can't delete genres that have no books, which is a problem. Because of that, I haven't been able to test deleting genres yet.
 
 ### Still Needs to be Built Out:
+- Book covers not implemented
+- Author pictures not implemented
 - After adding a Book, Genre, Author, etc. the server returns a success message, which is a plain HTML message that takes the user away from the main site. We need to show the user a success message without seeming to depart from the site / take them away from navigation. Multiple possible options for this, including a pop-up, or a success message appended into the DOM.
 - On Add Book: need more work to be able to add New Author at the same time. Currently does not read/store information from the modal.
 - On Add Book: need additional server logic to check to see if a Book is being added without Author information (e.g. if they intend to add it later)
