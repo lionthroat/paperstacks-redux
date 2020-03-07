@@ -6,7 +6,9 @@
 <!-- Need additional logic to display multiple authors -->
 <!-- May need additional logic or different SQL to display reviews without ratings and vice versa -->
 <script language='javascript'>
-  
+  function showEditBookModal() {
+    $('edit-book-modal').modal('show')
+  }
   </script>
 {% extends 'layout.html' %}
 
@@ -34,7 +36,7 @@
     {% endfor %}
 
     <div>
-      <button id="edit-book-button" class="btn btn-primary mx-2" data-toggle="modal" data-target="#edit-book-modal">Edit Book</button>
+      <button id="edit-book-button" class="btn btn-primary mx-2" data-toggle="modal" data-target="#edit-book-modal" onclick="showEditBookModal()">Edit Book</button>
       <button id="rem-book-button" class="btn btn-primary mx-2">Remove Book</button>
     </div>
 
