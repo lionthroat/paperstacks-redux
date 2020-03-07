@@ -71,7 +71,28 @@
           <button id="edit-review-button" class="btn btn-secondary mx-2">Edit Review</button>
           <button id="rem-review-button" class="btn btn-secondary mx-2">Remove Review</button>
         </div>
+        <div class="modal" tabindex="-1" role="dialog" area-labelledby="Edit Book" area-hidden="true" id="edit-book-modal">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Edit "{{ book['book_title'] }}"</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <label for="update-title" class="filter-input-label">Update Title:</label>
+                <input type="text" name="update-title" id="update-title" class="filter-input form-control" value="{{ book['book_title'] }}">
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="" data-dismiss="modal">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <hr />
+
       {% endfor %}
     </div>
 
