@@ -65,9 +65,10 @@
         <div class="form-group w-70">
           <label for="search_genre">Genre</label>
           <select class="form-control" name="search_genre">
-          {% for genre in genres_list %}
-            <option>{{ genre['genre_name'] }}</option>
-          {% endfor %}
+            <option value=''></option>
+            {% for genre in genres_list %}
+              <option value="{{ genre['genre_id'] }}">{{ genre['genre_name'] }}</option>
+            {% endfor %}
           </select>
         </div>
 

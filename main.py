@@ -427,7 +427,6 @@ def search():
 
         # ADVANCED SEARCH.
         elif request.form['search_submit'] == 'advanced_search':
-            print("advanced search")
             # fetch form data from advanced search on /search
             title = request.form['search_title']
             author = request.form['search_author']
@@ -439,7 +438,8 @@ def search():
             connection = mysql.connect()
             cursor = connection.cursor(pymysql.cursors.DictCursor)
             search_string = ("'%" + title + "%'") # allows substring search from book titles
-            select_stmt = "SELECT book.isbn, book.book_title, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id WHERE " # put together final query
+            select_stmt = "SELECT book.isbn, book.book_title, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id JOIN Genres_Books gb on gb.isbn = book.isbn JOIN Genres genre ON genre.genre_id = gb.genre_id WHERE " # put together final query
+
             query_num = 0
             if title != '':
                 title_select = "book.book_title LIKE " + ("'%" + title + "%'")
@@ -481,20 +481,34 @@ def search():
                 select_stmt = select_stmt + author_select
                 query_num += 1
 
+            if genre != '':
+                if query_num != 0:
+                    genre_select = " AND genre.genre_id = " + genre
+                    search_query = search_query + ", Genre: " + genre
+                else:
+                    genre_select = "genre.genre_id = " + genre
+                    search_query = "Genre: " + genre
+
+                select_stmt = select_stmt + genre_select
+                query_num += 1
+
             cursor.execute(select_stmt)
             books = cursor.fetchall()
             cursor.close()
             connection.close()
 
             # advanced search operation 2: look for search term(s) in Authors
-            connection = mysql.connect()
-            cursor = connection.cursor(pymysql.cursors.DictCursor)
-            search_string = ("'%" + author + "%'") # allows substring search from author names
-            select_stmt = "SELECT auth.author_id, auth.author_name FROM Authors auth WHERE auth.author_name LIKE " + search_string # put together final query
-            cursor.execute(select_stmt)
-            authorResult = cursor.fetchall()
-            cursor.close()
-            connection.close()
+            if author != '':
+                connection = mysql.connect()
+                cursor = connection.cursor(pymysql.cursors.DictCursor)
+                search_string = ("'%" + author + "%'") # allows substring search from author names
+                select_stmt = "SELECT auth.author_id, auth.author_name FROM Authors auth WHERE auth.author_name LIKE " + search_string # put together final query
+                cursor.execute(select_stmt)
+                authorResult = cursor.fetchall()
+                cursor.close()
+                connection.close()
+            else:
+                authorResult = ''
 
             # Page display: retrieve genre data from database for search form
             connection = mysql.connect()
