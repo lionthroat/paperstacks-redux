@@ -22,7 +22,7 @@
 			<div class="row">
 				<ul>
         {% for book in author %}
-          <li><a href="book/{{ book['isbn'] }}">{{ book['book_title'] }}</a></li>
+          <li><a href="/book/{{ book['isbn'] }}">{{ book['book_title'] }}</a></li>
         {% endfor %}
 				</ul>
 			</div>
