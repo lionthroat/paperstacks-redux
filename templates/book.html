@@ -116,7 +116,25 @@
           {{ review['review_content'] }}
         </p>
         <div>
-          <button id="edit-rating-button" class="btn btn-secondary mx-2">Edit Rating</button>
+          <button id="edit-rating-button" class="btn btn-secondary mx-2" data-toggle="modal" data-target="edit-rating-modal">Edit Rating</button>
+          <div class="modal" id="edit-rating-modal" tabindex="-1" role="dialog" area-labelledby="Edit Rating" area-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Edit Rating</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary" onclick="" data-dismiss="modal">Save Changes</button>
+                </div>
+              </div>
+            </div>
+          </div>
           <button id="rem-rating-button" class="btn btn-secondary mx-2">Remove Rating</button>
           <button id="edit-review-button" class="btn btn-secondary mx-2">Edit Review</button>
           <button id="rem-review-button" class="btn btn-secondary mx-2">Remove Review</button>
