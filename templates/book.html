@@ -6,9 +6,6 @@
 <!-- Need additional logic to display multiple authors -->
 <!-- May need additional logic or different SQL to display reviews without ratings and vice versa -->
 <script language='javascript'>
-  function showEditBookModal() {
-    $('edit-book-modal').modal('show')
-  }
   </script>
 {% extends 'layout.html' %}
 
@@ -51,6 +48,32 @@
             <div class="modal-body">
               <label for="update-title" class="filter-input-label">Update Title:</label>
               <input type="text" name="update-title" id="update-title" class="filter-input form-control" value="{{ book['book_title'] }}">
+              <div id="author_section">
+                <div class="form-group">
+                  <label for="book_author">Update Author(s)</label>
+                  <select multiple class="form-control" id="book_author" name="book_author">
+                    {% for author in authors %}
+                    <!-- will do this kind of thing to pre-select current authors:
+                    https://python-forum.io/Thread-How-do-I-fetch-values-from-db-to-Select-Options-using-Flask-->
+                    <option value="{{ author['author_id'] }}">{{ author['author_name'] }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              <!-- Had to make the Add New Author button into regular link because otherwise it was calling the POST method when you add a new Author, which called the server to try to add a book. This broke everything. Not sure if another way around it -->
+              <a href="#" id="new-author" data-toggle="modal" data-target="#new-auth-modal">&plus; Add New Author</a>
+              </div>
+              <div class="form-group">
+                <label for="book_genre">Genre(s) - pick at least one</label>
+                <select multiple class="form-control" name="book_genre" id="book_genre">
+                {% for genre in genres %}
+                <option value="{{ genre['genre_id'] }}">{{ genre['genre_name'] }}</option>
+                {% endfor %}
+                </select>
+              </div>
+              <label for="update-isbn" class="filter-input-label">Update ISBN:</label>
+              <input type="text" name="update-isbn" id="update-isbn" class="filter-input form-control" value="{{ book['isbn'] }}">
+              <label for="update-year" class="filter-input-label">Update Year Published:</label>
+              <input type="text" name="update-year" id="update-year" class="filter-input form-control" value="{{ book['year_published'] }}">
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
