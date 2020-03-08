@@ -378,17 +378,6 @@ def search():
         return render_template('search.html', genres_list=GenresSQL)
 
     elif request.method == 'POST':
-        # book = request.form['book']
-        # # search by author or book
-        # cursor.execute("SELECT name, author from Book WHERE name LIKE %s OR author LIKE %s", (book, book))
-        # conn.commit()
-        # data = cursor.fetchall()
-        # # all in the search box will return all the tuples
-        # if len(data) == 0 and book == 'all':
-        #     cursor.execute("SELECT name, author from Book")
-        #     conn.commit()
-        #     data = cursor.fetchall()
-        # return render_template('search.html', data=data)
 
         # TINY SEARCH
         if request.form['tiny'] != '':
