@@ -379,10 +379,10 @@ def search():
 
     elif request.method == 'POST':
 
-        # TINY SEARCH
-        if request.form['tiny'] != '':
-            # fetch user's search query from navbar
-            tiny_search_query = request.form['tiny']
+        # NAVBAR SEARCH
+        if request.form['search_submit'] == 'navbar_search':
+            print("navbar search")
+            search_query = request.form['tiny']
 
             # retrieve genre data from database for search form
             connection = mysql.connect()
@@ -396,7 +396,7 @@ def search():
             # search 1: look for search term in Books
             connection = mysql.connect()
             cursor = connection.cursor(pymysql.cursors.DictCursor)
-            search_string = ("'%" + tiny_search_query + "%'") # allows substring search from book titles
+            search_string = ("'%" + search_query + "%'") # allows substring search from book titles
             select_stmt = "SELECT book.isbn, book.book_title FROM Books book WHERE book.book_title LIKE" + search_string # put together final query
             cursor.execute(select_stmt)
             books = cursor.fetchall()
@@ -406,7 +406,7 @@ def search():
             # search 2: look for search term in Authors
             connection = mysql.connect()
             cursor = connection.cursor(pymysql.cursors.DictCursor)
-            search_string = ("'%" + tiny_search_query + "%'") # allows substring search from author names
+            search_string = ("'%" + search_query + "%'") # allows substring search from author names
             select_stmt = "SELECT auth.author_id, auth.author_name FROM Authors auth WHERE auth.author_name LIKE " + search_string # put together final query
             cursor.execute(select_stmt)
             authors = cursor.fetchall()
@@ -416,17 +416,100 @@ def search():
             # search 3: look for search term in Genres
             connection = mysql.connect()
             cursor = connection.cursor(pymysql.cursors.DictCursor)
-            search_string = ("'%" + tiny_search_query + "%'") # allows substring search from genres names
+            search_string = ("'%" + search_query + "%'") # allows substring search from genres names
             select_stmt = "SELECT genre.genre_id, genre.genre_name FROM Genres genre WHERE genre.genre_name LIKE " + search_string # put together final query
             cursor.execute(select_stmt)
             genres = cursor.fetchall()
             cursor.close()
             connection.close()
 
-            return render_template('search.html', search_query=tiny_search_query, genres_list=GenresSQL, books=books, authors=authors, genres=genres)
+            return render_template('search.html', search_query=search_query, genres_list=GenresSQL, books=books, authors=authors, genres=genres)
 
-        elif request.form['tiny'] == '':
+        # ADVANCED SEARCH.
+        elif request.form['search_submit'] == 'advanced_search':
+            print("advanced search")
+            # fetch form data from advanced search on /search
+            title = request.form['search_title']
+            author = request.form['search_author']
+            year = request.form['search_year']
+            isbn = request.form['search_isbn']
+            genre = request.form['search_genre']
 
+            # advanced search operation 1: look for search term(s) in Books
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            search_string = ("'%" + title + "%'") # allows substring search from book titles
+            select_stmt = "SELECT book.isbn, book.book_title, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id WHERE " # put together final query
+            query_num = 0
+            if title != '':
+                title_select = "book.book_title LIKE " + ("'%" + title + "%'")
+                search_query = "Title: " + title
+
+                select_stmt = select_stmt + title_select
+                query_num += 1
+
+            if year != '':
+                if query_num != 0:
+                    year_select = " AND book.year_published = " + year
+                    search_query = search_query + ", Year Published: " + year
+                else:
+                    year_select = "book.year_published = " + year
+                    search_query = "Year Published: " + year
+
+                select_stmt = select_stmt + year_select
+                query_num += 1
+
+            if isbn != '':
+                if query_num != 0:
+                    isbn_select = " AND book.isbn = " + isbn
+                    search_query = search_query + ", ISBN-10: " + isbn
+                else:
+                    isbn_select = "book.isbn = " + isbn
+                    search_query = "ISBN-10: " + isbn
+
+                select_stmt = select_stmt + isbn_select
+                query_num += 1
+
+            if author != '':
+                if query_num != 0:
+                    author_select = " AND auth.author_name LIKE " + ("'%" + author + "%'")
+                    search_query = search_query + ", Author: " + author
+                else:
+                    author_select = "auth.author_name LIKE " + ("'%" + author + "%'")
+                    search_query = "Author: " + author
+
+                select_stmt = select_stmt + author_select
+                query_num += 1
+
+            cursor.execute(select_stmt)
+            books = cursor.fetchall()
+            cursor.close()
+            connection.close()
+
+            # advanced search operation 2: look for search term(s) in Authors
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            search_string = ("'%" + author + "%'") # allows substring search from author names
+            select_stmt = "SELECT auth.author_id, auth.author_name FROM Authors auth WHERE auth.author_name LIKE " + search_string # put together final query
+            cursor.execute(select_stmt)
+            authorResult = cursor.fetchall()
+            cursor.close()
+            connection.close()
+
+            # Page display: retrieve genre data from database for search form
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+            cursor.execute(select_stmt)
+            GenresSQL = cursor.fetchall()
+            cursor.close()
+            connection.close()
+
+            return render_template('search.html', search_query=search_query, genres_list=GenresSQL, books=books, authors=authorResult)
+
+
+        # search (user pressed search but didn't enter query)
+        else:
             # retrieve genre data from database for search form
             connection = mysql.connect()
             cursor = connection.cursor(pymysql.cursors.DictCursor)
