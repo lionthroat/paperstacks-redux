@@ -1,15 +1,19 @@
-<!-- Page Display dictionaries (page MUST receive): -->
-<!-- Receives dictionary 'genres' with keys [genre_id, genre_name] -->
+<!-- Page Display (page MUST receive): -->
+<!-- dictionary: 'genres_list' with keys [genre_id, genre_name] -->
 
-<!-- Search Results dictionaries (page MAY receive): -->
-<!-- 'books' with keys [isbn, book_title] -->
+<!-- Search Results (page MAY receive): -->
+<!-- string: 'search_query' -->
+<!-- dictionary: 'books' with keys [isbn, book_title] -->
+<!-- dictionary: 'authors' with keys [author_id, author_name] -->
+<!-- dictionary: 'genres' with keys [genre_id, genre_name] -->
+
 {% extends 'layout.html' %}
 
 {% block body %}
-  <div class="jumbotron mt-1 mb-4">
-    <h2 class="name mb-2">Book Search</h2>
+  <div class="jumbotron mt-0 mb-0">
+    <h2 class="name mb-2 text-center mt-0">Book Search</h2>
 
-    <form id="advanced_search" class="col-lg-6 mx-auto" action="/search" method="post">
+    <form id="advanced_search" class="col-lg-8 mx-auto" action="/search" method="post">
 
     <div class="container">
       <div class="row">
@@ -60,7 +64,7 @@
         <div class="form-group">
           <label for="search_genre">Genre</label>
           <select multiple class="form-control" name="search_genre">
-          {% for genre in genres %}
+          {% for genre in genres_list %}
             <option>{{ genre['genre_name'] }}</option>
           {% endfor %}
           </select>
@@ -82,29 +86,39 @@
         <li class="list-group-item bg-info text-light"><h6>Showing results for: '<i>{{ search_query }}</i>'</h6></li>
       </ul>
 
+      <div class="row mt-1"><h5>Books:</h5></div>
       {% if books|length %}
-      <div class="row"><h5>Books:</h5></div>
       <ul>
         {% for book in books %}
           <li class="list-group-item"><a href="book/{{ book['isbn'] }}">{{ book['book_title'] }}</a></li>
         {% endfor %}
-      </ul>
       {% else %}
-         no books
+          <i>(No results in books)</i>
       {% endif %}
+      </ul>
 
-      <div class="row"><h5>Authors:</h5></div>
+      <div class="row mt-2"><h5>Authors:</h5></div>
+      {% if authors|length %}
       <ul>
-      {% if authors is defined %}
         {% for author in authors %}
           <li class="list-group-item"><a href="author/{{ author['author_id'] }}">{{ author['author_name'] }}</a></li>
         {% endfor %}
       {% else %}
-          <li class="list-group-item"><i>(No results in authors)</i></li>
+          <i>(No results in authors)</i>
       {% endif %}
       </ul>
 
-      <div class="row"><h5>Genres:</h5></div>
+      <div class="row mt-2"><h5>Genres:</h5></div>
+      {% if genres|length %}
+      <ul>
+        {% for genre in genres %}
+          <li class="list-group-item"><a href="genre/{{ genre['genre_id'] }}">{{ genre['genre_name'] }}</a></li>
+        {% endfor %}
+      {% else %}
+          <i>(No results in genres)</i>
+      {% endif %}
+      </ul>
+
     {% endif %}
   </div>
 
