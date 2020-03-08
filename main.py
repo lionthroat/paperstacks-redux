@@ -28,7 +28,7 @@ def index():
     cursor.close()
     connection.close()
 
-    return render_template('home.html', genres=GenresSQL, featuredbooks=featuredBookSQL)
+    return render_template('home.html', genres_list=GenresSQL, featuredbooks=featuredBookSQL)
 
 @app.route('/books')
 def books():
