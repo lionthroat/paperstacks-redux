@@ -1,35 +1,46 @@
+<!-- Page Display dictionaries (page MUST receive): -->
 <!-- Receives dictionary 'genres' with keys [genre_id, genre_name] -->
 
+<!-- Search Results dictionaries (page MAY receive): -->
+<!-- 'books' with keys [isbn, book_title] -->
 {% extends 'layout.html' %}
 
 {% block body %}
-  <div class="jumbotron mt-4 mb-4">
-    <h2 class="name mb-4">Book Search</h2>
-    <form>
+  <div class="jumbotron mt-1 mb-4">
+    <h2 class="name mb-2">Book Search</h2>
+
+    <form id="advanced_search" class="col-lg-6 mx-auto" action="/search" method="post">
+
     <div class="container">
       <div class="row">
         <div class="col">
+
           <div class="form-group">
-            <label for="filter-text">Title or Keyword</label>
-            <input type="text" class="form-control" id="filter-text" placeholder="The Help">
+            <label for="search_title">Title or Keyword</label>
+            <input type="text" name="search_title" class="form-control" placeholder="The Help">
           </div>
+
           <div class="form-group">
-            <label for="filter-text">Author</label>
-            <input type="text" class="form-control" id="filter-author" placeholder="Elizabeth Gilbert">
+            <label for="search_author">Author</label>
+            <input type="text" name="search_author" class="form-control" placeholder="Elizabeth Gilbert">
           </div>
+
           <div class="form-group">
-            <label for="filter-text">ISBN-10</label>
-            <input type="text" class="form-control" id="filter-isbn" placeholder="98735513209">
+            <label for="search_isbn">ISBN-10</label>
+            <input type="text" name="search_isbn" class="form-control" placeholder="98735513209">
           </div>
+
         </div>
         <div class="col">
+
           <div class="form-group">
-            <label for="filter-year">Year Published</label>
-            <input type="text" class="form-control" id="filter-year" placeholder="2003">
+            <label for="search_year">Year Published</label>
+            <input type="text" name="search_year" class="form-control" placeholder="2003">
           </div>
+
           <div class="form-group">
-            <label for="filter-rating">Average Rating</label>
-            <select class="form-control" id="filter-rating">
+            <label for="search_rating">Average Rating</label>
+            <select class="form-control" name="search_rating">
               <option value="null"></option>
               <option value="five-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</option>
               <option value="four-stars">&#9733;&#9733;&#9733;&#9733;&#9734;</option>
@@ -38,22 +49,65 @@
               <option value="one-stars">&#9733;&#9734;&#9734;&#9734;&#9734; :(</option>
             </select>
           </div>
+
           <div class="form-group">
-            <label for="filter-has-reviews" class="filter-input-label">Has Reviews? </label>
-            <input type="checkbox" name="filter-reviews" id="filter-reviews" value="has-reviews">
+            <label for="search_has_reviews">Has Reviews? </label>
+            <input type="checkbox" name="search_has_reviews" value="has_reviews">
           </div>
+
         </div>
       </div>
         <div class="form-group">
-          <label for="filter-genre">Genre</label>
-          <select multiple class="form-control" id="filter-genre">
+          <label for="search_genre">Genre</label>
+          <select multiple class="form-control" name="search_genre">
           {% for genre in genres %}
             <option>{{ genre['genre_name'] }}</option>
           {% endfor %}
           </select>
         </div>
-      <button id="filter-update-button" class="action-button btn btn-primary mt-4 px-4">Search</button>
+
+      <button type="submit" id="advanced-search-button" class="action-button btn btn-primary mt-4 px-4">Search</button>
+
       </div>
     </form>
   </div>
+  <!-- Search Results dictionaries (page MAY receive): -->
+  <!-- 'books' with keys [book.isbn, book.book_title] -->
+  <hr>
+
+  <div class="container">
+    {% if search_query is defined %}
+      <h2 class="name mb-4">Search Results:</h2>
+      <ul>
+        <li class="list-group-item bg-info text-light"><h6>Showing results for: '<i>{{ search_query }}</i>'</h6></li>
+      </ul>
+
+      {% if books|length %}
+      <div class="row"><h5>Books:</h5></div>
+      <ul>
+        {% for book in books %}
+          <li class="list-group-item"><a href="book/{{ book['isbn'] }}">{{ book['book_title'] }}</a></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+         no books
+      {% endif %}
+
+      <div class="row"><h5>Authors:</h5></div>
+      <ul>
+      {% if authors is defined %}
+        {% for author in authors %}
+          <li class="list-group-item"><a href="author/{{ author['author_id'] }}">{{ author['author_name'] }}</a></li>
+        {% endfor %}
+      {% else %}
+          <li class="list-group-item"><i>(No results in authors)</i></li>
+      {% endif %}
+      </ul>
+
+      <div class="row"><h5>Genres:</h5></div>
+    {% endif %}
+  </div>
+
+  <!-- this jumbotron is just a spacer at the bottom of the page -->
+  <div class="jumbotron mt-4 mb-5"></div>
 {% endblock %}
