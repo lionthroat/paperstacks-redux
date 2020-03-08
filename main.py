@@ -365,16 +365,89 @@ def add_review():
             connection.close()
         return ('Thank you for your rating/review!');
 
-@app.route('/search')
+@app.route('/search', methods=['POST','GET'])
 def search():
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
-    cursor.execute(select_stmt)
-    GenresSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return render_template('search.html', genres=GenresSQL)
+    if request.method == 'GET':
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+        cursor.execute(select_stmt)
+        GenresSQL = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return render_template('search.html', genres_list=GenresSQL)
+
+    elif request.method == 'POST':
+        # book = request.form['book']
+        # # search by author or book
+        # cursor.execute("SELECT name, author from Book WHERE name LIKE %s OR author LIKE %s", (book, book))
+        # conn.commit()
+        # data = cursor.fetchall()
+        # # all in the search box will return all the tuples
+        # if len(data) == 0 and book == 'all':
+        #     cursor.execute("SELECT name, author from Book")
+        #     conn.commit()
+        #     data = cursor.fetchall()
+        # return render_template('search.html', data=data)
+
+        # TINY SEARCH
+        if request.form['tiny'] != '':
+            # fetch user's search query from navbar
+            tiny_search_query = request.form['tiny']
+
+            # retrieve genre data from database for search form
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+            cursor.execute(select_stmt)
+            GenresSQL = cursor.fetchall()
+            cursor.close()
+            connection.close()
+
+            # search 1: look for search term in Books
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            search_string = ("'%" + tiny_search_query + "%'") # allows substring search from book titles
+            select_stmt = "SELECT book.isbn, book.book_title FROM Books book WHERE book.book_title LIKE" + search_string # put together final query
+            cursor.execute(select_stmt)
+            books = cursor.fetchall()
+            cursor.close()
+            connection.close()
+
+            # search 2: look for search term in Authors
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            search_string = ("'%" + tiny_search_query + "%'") # allows substring search from author names
+            select_stmt = "SELECT auth.author_id, auth.author_name FROM Authors auth WHERE auth.author_name LIKE " + search_string # put together final query
+            cursor.execute(select_stmt)
+            authors = cursor.fetchall()
+            cursor.close()
+            connection.close()
+
+            # search 3: look for search term in Genres
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            search_string = ("'%" + tiny_search_query + "%'") # allows substring search from genres names
+            select_stmt = "SELECT genre.genre_id, genre.genre_name FROM Genres genre WHERE genre.genre_name LIKE " + search_string # put together final query
+            cursor.execute(select_stmt)
+            genres = cursor.fetchall()
+            cursor.close()
+            connection.close()
+
+            return render_template('search.html', search_query=tiny_search_query, genres_list=GenresSQL, books=books, authors=authors, genres=genres)
+
+        elif request.form['tiny'] == '':
+
+            # retrieve genre data from database for search form
+            connection = mysql.connect()
+            cursor = connection.cursor(pymysql.cursors.DictCursor)
+            select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+            cursor.execute(select_stmt)
+            GenresSQL = cursor.fetchall()
+            cursor.close()
+            connection.close()
+
+            return render_template('search.html', genres=GenresSQL)
 
 @app.route('/about')
 def about():
