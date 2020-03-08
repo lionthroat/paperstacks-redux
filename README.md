@@ -1,29 +1,40 @@
-# Redux notes:
-## Last updated 3/1/2020
+# Paperstacks (Redux) Notes
+## Last updated 3/8/2020
 
 ### Known Bugs:
-- Links to Book pages from an Author page aren't working. The routing is set to 'book/<isbn>' but when you're on an Author's page, you're already at 'author/<author_id>', so it just appends that to the relative URL and ends up looking like 'author/121/book/393354377', which breaks.
-- Reviews/Ratings displaying twice each on Book pages. Issue with SQL?
-- Bug with Genre pages: it will only display single Genre pages for which there are at least one Book. This means you can't delete genres that have no books, which is a problem. Because of that, I haven't been able to test deleting genres yet.
+- Reviews/Ratings displaying twice each on some Book pages. Issue with SQL to be fixed.
+
+### Recently Built Features:
+- 3/8/2020: Genre Delete Validation. Before deleting a Genre from the database, there is now a preliminary SQL query that performs a COUNT(genre_id) to tally Books associated with a Genre. If this is a nonzero sum, the delete operation is aborted. The user then sees an error message as a <div> at the top of the page.
+- 3/8/2020: Genre Delete. This routing and SQL already existed, but there had been no way to use it. Now, if a user successfully deletes a Genre from the database, they will be redirected to the main Genres page, and will see a success message in a <div> at the top of the page, which confirms the name of the Genre they removed.
+- 3/7/2020: Edit Book Modal.
+- 3/7/2020: Upload Book Cover and Author Image.
+- 3/7/2020: Advanced Search Functionality (WIP). User can now perform a search from the navigation bar (a simple keyword search), or perform a more advanced search from the Search page or home page. In the advanced search, the user has the option of using one or more of the following criteria: book title (can be a substring), author name (can be a substring), year published, ISBN-10, or genre. Additional search criteria related to ratings/reviews not yet implemented.
+
+### Recently Fixed Bugs:
+- 3/8/2020: Links to Book pages from an Author page now working. The routing was set to the relative URL 'book/<isbn>' (which resulted in the site-breaking link format 'author/121/book/393354377'), and needed to be changed to an absolute URL '/book/<isbn>'
+- 3/8/2020: Individual Genre pages (at /genre/<id>) now display correctly even when they have no books associated with them. There needed to be additional Jinja templating
+- 3/7/2020: CSS fixed so that styling now passed correctly to pages with dynamically generated content. This was also an issue with a relative vs. absolute URL, and had affected the navbar and other page elements.
 
 ### Still Needs to be Built Out:
-- Book covers not implemented
-- Author pictures not implemented
-- Tiny search not implemented
-- Advanced search not implemented
-- Displaying or searching by average star rating of books not implemented
+- Update/Remove Ratings (soft deadline 3/9/2020)
+- Update/Remove Reviews (soft deadline 3/9/2020)
+- Update/Remove Books (soft deadline 3/9/2020)
+- Update/Remove Authors (soft deadline 3/9/2020)
+- Book covers not fully implemented
+- Author pictures not fully implemented
+- Advanced search not completed
+- Display and search by average star rating of books
+- Search by books that have reviews
 - After adding a Book, Genre, Author, etc. the server returns a success message, which is a plain HTML message that takes the user away from the main site. We need to show the user a success message without seeming to depart from the site / take them away from navigation. Multiple possible options for this, including a pop-up, or a success message appended into the DOM.
 - On Add Book: need more work to be able to add New Author at the same time. Currently does not read/store information from the modal.
 - On Add Book: need additional server logic to check to see if a Book is being added without Author information (e.g. if they intend to add it later)
 - On Add Book: need additional validation to see if user is attempting to add a Book that already exists. This screws up the insert so that other Book data may not be inserted correctly alongside the Book entry.
 - On See All Books and individual Book pages, only one Author displays, even when there are multiple Authors. On Books, this is because I grouped by ISBN. Just needs to be tweaked, and Jinja code added to the HTML to display multiple authors when present. Logic can be copied from the Author page, where multiple books by same Author are shown.
-- On Add Genre: Possibly need additional validation to make sure user is not adding an existing Genre.
-- On Add Book: Possibly need additional validation to make sure user is not adding an existing Book.
-- On Add Author: Possibly need additional validation to make sure user is not adding an existing Author.
+- On Add Genre: Need additional validation to make sure user is not adding an existing Genre.
+- On Add Book: Need additional validation to make sure user is not adding an existing Book.
+- On Add Author: Need additional validation to make sure user is not adding an existing Author.
 
 ### Other Issues:
-- Non-Bootstrap (custom) CSS not being passed to dynamically generated pages, affecting appearance of Navbar and other styled details.
-- Is there another way to assign auto-incrementing primary keys to items being inserted into tables other than the way it is currently implemented? I.e., is there a SQL function to do this neatly, rather than calling something like MAX(Genres.genre_id) and then incrementing it by 1 manually before an insert?
-
-### Unknown / Danger:
-- The functionality to delete a Genre is partially built, but doesn't check to see if a Genre has Books still associated with it. I have no clue what happens if you try to delete a Genre with Books still in it.
+- General styling/commenting consistency in main python application. (Heather to comment certain passages better)
+- Does the connection to db actually need to be closed after each query is executed within a view, or can we combine multiple actions that occur within the same function? This would save on a lot of lines of code, but if it allows data to get corrupt or is a security concern, then it needs to be left as is. Need to research best practices.
