@@ -1,6 +1,3 @@
-import io
-import time
-import csv
 import pymysql
 import pymysql.cursors
 from app import app
@@ -228,17 +225,26 @@ def genres():
     connection.close()
     return render_template('genres.html', genres=GenresSQL, books=BooksSQL)
 
-# NOTE!!! Bug with this routing logic: it will only display genres for which there are books.
 @app.route('/genre/<string:id>/')
 def genre(id):
+    # This first query returns only the genre name.
     connection = mysql.connect()
     cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select genre.genre_id, book.isbn, book.book_title, genre.genre_name from Books book join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where genre.genre_id = " + id
+    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre where genre.genre_id = " + id
     cursor.execute(select_stmt)
-    result = cursor.fetchall()
+    genre_name= cursor.fetchall()
     cursor.close()
     connection.close()
-    return render_template('genre.html', genreinfo=result)
+
+    # Second query finds any books in that genre
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select book.isbn, book.book_title from Books book join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where genre.genre_id = " + id
+    cursor.execute(select_stmt)
+    books_result = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('genre.html', genreinfo=genre_name, books=books_result)
 
 @app.route('/add_genre', methods=['POST','GET'])
 def add_genre():
