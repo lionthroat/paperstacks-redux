@@ -433,8 +433,6 @@ def search():
             year = request.form['search_year']
             isbn = request.form['search_isbn']
             genre = request.form['search_genre']
-            # review = request.form['search_has_reviews']
-            # print(review)
 
             # advanced search operation 1: look for search term(s) in Books
             connection = mysql.connect()
