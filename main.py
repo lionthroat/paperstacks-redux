@@ -298,11 +298,13 @@ def add_genre():
         connection.commit() # NOTE: entry will not be inserted w/o this
         cursor.close()
         connection.close()
+
         return ('Genre added!'); # NOTE: :( not a pretty page that displays, needs to redisplay regular website
 
 @app.route('/rem_genre/<string:id>/', methods=['POST'])
 def rem_genre(id):
-    # Step 1: Before removing a Genre, check to make sure no Books associated with it
+
+    # Before removing a Genre, check to make sure no Books associated with it
     connection = mysql.connect()
     cursor = connection.cursor(pymysql.cursors.DictCursor)
     query = "SELECT COUNT(genre.genre_id) AS `count` FROM Genres genre JOIN Genres_Books gb ON gb.genre_id = genre.genre_id JOIN Books book ON gb.isbn = book.isbn WHERE genre.genre_id = " + id
@@ -312,16 +314,6 @@ def rem_genre(id):
     cursor.close()
     connection.close()
 
-    # connection = mysql.connect()
-    # cursor = connection.cursor(pymysql.cursors.DictCursor)
-    # query = "DELETE FROM Genres WHERE Genres.genre_id = " + id
-    # cursor.execute(query)
-    # connection.commit()
-    # cursor.close()
-    # connection.close()
-
-    # Need remove message success or error
-
     # if there ARE books still in the genre
     if result[0]['count'] != 0:
         url = ("/genre/" + id + "/" + "error/")
@@ -329,26 +321,52 @@ def rem_genre(id):
         return redirect(url)
         # return redirect("http://www.example.com", code=302)
 
-    # After removal....
-    #Re-display Genres page, operation 1: get genre data for list
+    # Delete Genre
     else:
+        # get the name of the Genre we're removing
         connection = mysql.connect()
         cursor = connection.cursor(pymysql.cursors.DictCursor)
-        select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+        select_stmt = "select genre.genre_name from Genres genre where genre.genre_id = " + id
         cursor.execute(select_stmt)
-        GenresSQL = cursor.fetchall()
+        result = cursor.fetchall()
+        genre_to_remove = result[0]['genre_name']
         cursor.close()
         connection.close()
 
-        # Re-display Genres page, operation 2: get books data to list books in each genre category
+        # delete the Genre
         connection = mysql.connect()
         cursor = connection.cursor(pymysql.cursors.DictCursor)
-        select_stmt = "select book.isbn, book.book_title, gb.genre_id FROM Books book JOIN Genres_Books gb ON gb.isbn = book.isbn"
-        cursor.execute(select_stmt)
-        BooksSQL = cursor.fetchall()
+        query = "DELETE FROM Genres WHERE Genres.genre_id = " + id
+        cursor.execute(query)
+        connection.commit()
         cursor.close()
         connection.close()
-        return render_template('genres.html', genres=GenresSQL, books=BooksSQL)
+
+        # tell the user which Genre they have successfully removed,
+        # and take them back to the main Genres page
+        url = ("/genres/rem_success/" + genre_to_remove + "/")
+        return redirect(url)
+
+@app.route('/genres/rem_success/<string:genre_name>/')
+def successfully_deleted_genre(genre_name):
+    # query 1: get genre data for list
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+    cursor.execute(select_stmt)
+    GenresSQL = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    # query 2: get books data to list books in each genre category
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select book.isbn, book.book_title, gb.genre_id FROM Books book JOIN Genres_Books gb ON gb.isbn = book.isbn"
+    cursor.execute(select_stmt)
+    BooksSQL = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('genres.html', genres=GenresSQL, books=BooksSQL, rem_success=genre_name)
 
 @app.route('/add_review', methods=['POST','GET'])
 def add_review():
