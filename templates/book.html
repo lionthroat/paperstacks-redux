@@ -33,13 +33,34 @@
       </p>
     </div>
       <p> {{ book['book_description'] }}</p>
-    {% endfor %}
 
-    <div>
-      <a href="#" id="edit-book-button" class="btn btn-primary mx-2" data-toggle="modal" data-target="#edit-book-modal" >Edit Book</a>
-
+      <div>
+        <a href="#" id="edit-book-button" class="btn btn-primary mx-2" data-toggle="modal" data-target="#edit-book-modal" >Edit Book</a>
       <button id="rem-book-button" class="btn btn-primary mx-2">Remove Book</button>
-    </div>
+      </div>
+
+      <div class="modal hide fade" tabindex="-1" role="dialog" area-labelledby="Edit Book" area-hidden="true" id="edit-book-modal">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Edit Book</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <label for="update-title" class="filter-input-label">Update Title:</label>
+              <input type="text" name="update-title" id="update-title" class="filter-input form-control" value="{{ book['book_title'] }}">
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary" onclick="" data-dismiss="modal">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {% endfor %}
 
       <!-- Average Rating not implemented yet -->
       <!-- <h3 class="header3"> Ratings</h3>
