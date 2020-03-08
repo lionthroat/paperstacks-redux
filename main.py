@@ -246,6 +246,28 @@ def genre(id):
     connection.close()
     return render_template('genre.html', genreinfo=genre_name, books=books_result)
 
+# If cannot remove genre
+@app.route('/genre/<string:id>/<string:error>/')
+def cannot_remove_genre(id, error):
+    # This first query returns only the genre name.
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre where genre.genre_id = " + id
+    cursor.execute(select_stmt)
+    genre_name= cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    # Second query finds any books in that genre
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select book.isbn, book.book_title from Books book join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where genre.genre_id = " + id
+    cursor.execute(select_stmt)
+    books_result = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('genre.html', genreinfo=genre_name, books=books_result, error=error)
+
 @app.route('/add_genre', methods=['POST','GET'])
 def add_genre():
     if request.method == 'GET':
@@ -279,16 +301,54 @@ def add_genre():
         return ('Genre added!'); # NOTE: :( not a pretty page that displays, needs to redisplay regular website
 
 @app.route('/rem_genre/<string:id>/', methods=['POST'])
-# NOTE: I'm absolutely unsure what happens when you try to delete a genre that still has books associated with it
 def rem_genre(id):
+    # Step 1: Before removing a Genre, check to make sure no Books associated with it
     connection = mysql.connect()
     cursor = connection.cursor(pymysql.cursors.DictCursor)
-    query = "DELETE FROM Genres WHERE Genres.genre_id = " + id
+    query = "SELECT COUNT(genre.genre_id) AS `count` FROM Genres genre JOIN Genres_Books gb ON gb.genre_id = genre.genre_id JOIN Books book ON gb.isbn = book.isbn WHERE genre.genre_id = " + id
     cursor.execute(query)
-    connection.commit() # NOTE: entry will not be removed w/o this
+    result = cursor.fetchall()
+    connection.commit()
     cursor.close()
     connection.close()
-    return ('Genre removed!'); # NOTE: :( not a pretty page, needs to redisplay regular website
+
+    # connection = mysql.connect()
+    # cursor = connection.cursor(pymysql.cursors.DictCursor)
+    # query = "DELETE FROM Genres WHERE Genres.genre_id = " + id
+    # cursor.execute(query)
+    # connection.commit()
+    # cursor.close()
+    # connection.close()
+
+    # Need remove message success or error
+
+    # if there ARE books still in the genre
+    if result[0]['count'] != 0:
+        url = ("/genre/" + id + "/" + "error/")
+        print(url)
+        return redirect(url)
+        # return redirect("http://www.example.com", code=302)
+
+    # After removal....
+    #Re-display Genres page, operation 1: get genre data for list
+    else:
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
+        cursor.execute(select_stmt)
+        GenresSQL = cursor.fetchall()
+        cursor.close()
+        connection.close()
+
+        # Re-display Genres page, operation 2: get books data to list books in each genre category
+        connection = mysql.connect()
+        cursor = connection.cursor(pymysql.cursors.DictCursor)
+        select_stmt = "select book.isbn, book.book_title, gb.genre_id FROM Books book JOIN Genres_Books gb ON gb.isbn = book.isbn"
+        cursor.execute(select_stmt)
+        BooksSQL = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        return render_template('genres.html', genres=GenresSQL, books=BooksSQL)
 
 @app.route('/add_review', methods=['POST','GET'])
 def add_review():
@@ -387,7 +447,6 @@ def search():
 
         # NAVBAR SEARCH
         if request.form['search_submit'] == 'navbar_search':
-            print("navbar search")
             search_query = request.form['tiny']
 
             # retrieve genre data from database for search form
@@ -431,7 +490,7 @@ def search():
 
             return render_template('search.html', search_query=search_query, genres_list=GenresSQL, books=books, authors=authors, genres=genres)
 
-        # ADVANCED SEARCH.
+        # ADVANCED SEARCH
         elif request.form['search_submit'] == 'advanced_search':
             # fetch form data from advanced search on /search
             title = request.form['search_title']
