@@ -37,7 +37,28 @@
       </div>
 
       <div>
-        <a href="#" id="edit-genre-button" class="btn btn-primary mx-2" data-toggle="modal" data-target="#edit-genre-modal">Edit Genre</a>
+
+
+
+      <div id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                  <h3 id="myModalLabel">Modal header</h3>
+          </div>
+          <div class="modal-body">
+              <form id="editGenre" method="post">
+                <input type="hidden" value="hello" id="myField">
+                  <button id="editGenreSubmit" type="submit">Submit</button>
+              </form>
+          </div>
+          <div class="modal-footer">
+              <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+              <button class="btn btn-primary">Save changes</button>
+          </div>
+      </div>
+
+
+        <a href="#editGenreModal" role="button" class="btn btn-primary mx-2" data-toggle="modal">Edit Genre</a>
 
         <form id="rem-genre" action="/rem_genre/{{ genre['genre_id'] }}" method="post">
           <button type="submit" id="rem-genre-button" class="btn btn-primary mx-2 mt-2">Remove Genre</button>
@@ -47,10 +68,7 @@
 
     </div>
 
-    <div class="modal hide fade" tabindex="-1" role="dialog" area-labelledby="Edit Genre" area-hidden="true" id="edit-genre-modal">
-
-      <form id="edit-genre-modal-form" action="/edit_genre/{{ genre['genre_id'] }}/" method="post">
-
+    <div class="modal hide fade" tabindex="-1" role="dialog" area-labelledby="Edit Genre" area-hidden="true" id="editGenreModal">
         <div class="modal-dialog" role="document">
           <div class="modal-content">
 
@@ -62,17 +80,20 @@
             </div>
 
             <div class="modal-body">
-              <label for="edit_genre_name">Genre Name:</label>
-              <input type="text" name="edit_genre_name" id="update-genre-title-field" class="form-control input-lg" value="{{ genre['genre_name'] }}">
+
+                <form id="editGenre" method="post" action="/edit_genre/{{ genre['genre_id'] }}/">
+
+                  <label for="update_genre_name">Genre Name:</label>
+                  <input type="text" name="update_genre_name" id="update_genre_name" class="form-control input-lg" value="{{ genre['genre_name'] }}">
+
+                  <button id="edit-genre-submit" class="btn btn-primary" type="submit">Submit</button>
+                </form>
+
             </div>
 
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-
-            <button type="submit" form="edit-genre-modal-form" id="edit-genre-button" class="btn btn-primary" data-dismiss="modal">Save Changes</button>
           </div><!-- End of Modal Footer -->
-        </form><!-- End of Edit Form -->
       </div><!-- End of Edit Modal -->
-
   {% endfor%}
 {% endblock %}

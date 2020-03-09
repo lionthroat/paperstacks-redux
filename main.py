@@ -381,19 +381,20 @@ def successfully_deleted_genre(genre_name):
 @app.route('/edit_genre/<string:genre_id>/', methods=['POST'])
 def edit_genre(genre_id):
     new_name = request.form['update_genre_name']
-    print("Genre ID: ", genre_id, "Updated name: ", new_name)
     connection = mysql.connect()
     cursor = connection.cursor(pymysql.cursors.DictCursor)
-    query = "UPDATE Genres SET genre_name = " + new_name + " WHERE genre_id = " + genre_id
+    name_string = ("'" + new_name + "'")
+    query = "UPDATE Genres SET genre_name = " + name_string + " WHERE genre_id = " + genre_id
     cursor.execute(query)
     connection.commit()
     cursor.close()
     connection.close()
 
-    url = ("/genre/id/edit_success/" + new_name + "/")
+    url = ("/genre/" + genre_id + "/edit_success/" + new_name + "/")
+    print(url)
     return redirect(url)
 
-# If cannot remove genre
+# Successfully updated Genre name
 @app.route('/genre/<string:id>/edit_success/<string:new_name>/')
 def edit_genre_success(id, new_name):
     # This first query returns only the genre name.
