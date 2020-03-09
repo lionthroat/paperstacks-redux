@@ -12,6 +12,7 @@
 - 3/7/2020: Advanced Search Functionality (WIP). User can now perform a search from the navigation bar (a simple keyword search), or perform a more advanced search from the Search page or home page. In the advanced search, the user has the option of using one or more of the following criteria: book title (can be a substring), author name (can be a substring), year published, ISBN-10, or genre. Additional search criteria related to ratings/reviews not yet implemented.
 
 ### Recently Fixed Bugs:
+- 3/8/2020: Reviews/Ratings displaying were displaying more than once because the SQL was not joining the 1:1 relationship properly between Ratings and Reviews to their associated Book, and then did not know how to handle NULL Reviews. This has been updated.
 - 3/8/2020: Links to Book pages from an Author page now working. The routing was set to the relative URL 'book/<isbn>' (which resulted in the site-breaking link format 'author/121/book/393354377'), and needed to be changed to an absolute URL '/book/<isbn>'
 - 3/8/2020: Individual Genre pages (at /genre/<id>) now display correctly even when they have no books associated with them. There needed to be additional Jinja templating
 - 3/7/2020: Edit Book modal now pops up correctly. It was not opening due to the button being out of scope of the Jinja templating for loop which contained the book's information.
@@ -35,6 +36,9 @@
 - On Add Genre: Need additional validation to make sure user is not adding an existing Genre.
 - On Add Book: Need additional validation to make sure user is not adding an existing Book.
 - On Add Author: Need additional validation to make sure user is not adding an existing Author.
+
+### Known Bugs:
+- None currently
 
 ### Other Issues:
 - General styling/commenting consistency in main python application. (Heather to comment certain passages better)
