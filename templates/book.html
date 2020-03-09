@@ -1,9 +1,12 @@
-<!-- Page dictionary 'bookresult' with keys: [isbn, book_title, year_published, book_description, author_name, genre_name] -->
-<!-- Page gets dictionary 'reviews' with keys: [isbn, rating_id, review_id, star_rating, rating_date, review_content] -->
-<!-- Page gets dictionary 'ratings' with keys: [isbn, rating_id, review_id, star_rating, rating_date] -->
+<!-- Gets dictionary 'bookresult' with keys: [isbn, book_title, year_published, book_description, author_name, genre_name] -->
+<!-- Gets dictionary 'reviews' with keys: [isbn, rating_id, review_id, star_rating, rating_date, review_content] -->
+<!-- Gets dictionary 'ratings' with keys: [isbn, rating_id, review_id, star_rating, rating_date] -->
+
+<!-- MAY receive 'rating_rem' if user just removed a Rating -->
 
 <!-- Need additional logic to display multiple authors -->
 <!-- May need additional logic or different SQL to display reviews without ratings and vice versa -->
+
 <script language='javascript'>
   </script>
 {% extends 'layout.html' %}
@@ -88,8 +91,19 @@
       <!-- <h3 class="header3"> Ratings</h3>
       <p class="rating-content"> Average rating: [avg] out of [#] of reviews &star; &star; &star; &star; &star;
       </p> -->
+
+    {% if rating_rem is defined %}
+    <div class="row">
+      <ul>
+        <li class="list-group-item bg-info text-light"><h6>Success:</h6> The selected Rating was removed.</li>
+      </ul>
+    </div>
+    {% endif %}
+
     <div class="row mt-4">
       <h3 class="header3 text-left mb-4">Reviews & Ratings</h3>
+
+
     </div>
       {% for review in reviews %}
         <h5 class="subheader text-left">Rating:
