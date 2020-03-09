@@ -3,6 +3,7 @@
 <!-- Gets dictionary 'ratings' with keys: [isbn, rating_id, review_id, star_rating, rating_date] -->
 
 <!-- MAY receive 'rating_rem' if user just removed a Rating -->
+<!-- MAY receive 'review_rem' if user just removed a Review -->
 
 <!-- Need additional logic to display multiple authors -->
 <!-- May need additional logic or different SQL to display reviews without ratings and vice versa -->
@@ -13,6 +14,22 @@
 
 {% block body %}
   <div class="jumbotron text-center mt-4">
+    
+    {% if rating_rem is defined %}
+    <div class="row mt-2 mb-2">
+      <ul>
+        <li class="list-group-item bg-primary text-light"><h6>Success:</h6> The selected Rating was removed.</li>
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if review_rem is defined %}
+    <div class="row mt-2 mb-2">
+      <ul>
+        <li class="list-group-item bg-primary text-light"><h6>Success:</h6> The selected Review was removed.</li>
+      </ul>
+    </div>
+    {% endif %}
     <!-- <div class="col">
       <div class="book-cover">
         <img src= {{ url_for('static', filename = '../static/crayons-quit.jpg') }} width="400" height="400" alt="previous" title="Previous" border="0">
@@ -91,14 +108,6 @@
       <!-- <h3 class="header3"> Ratings</h3>
       <p class="rating-content"> Average rating: [avg] out of [#] of reviews &star; &star; &star; &star; &star;
       </p> -->
-
-    {% if rating_rem is defined %}
-    <div class="row">
-      <ul>
-        <li class="list-group-item bg-info text-light"><h6>Success:</h6> The selected Rating was removed.</li>
-      </ul>
-    </div>
-    {% endif %}
 
     <div class="row mt-4">
       <h3 class="header3 text-left mb-4">Reviews & Ratings</h3>
