@@ -378,6 +378,43 @@ def successfully_deleted_genre(genre_name):
     connection.close()
     return render_template('genres.html', genres=GenresSQL, books=BooksSQL, rem_success=genre_name)
 
+@app.route('/edit_genre/<string:genre_id>/', methods=['POST'])
+def edit_genre(genre_id):
+    new_name = request.form['update_genre_name']
+    print("Genre ID: ", genre_id, "Updated name: ", new_name)
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    query = "UPDATE Genres SET genre_name = " + new_name + " WHERE genre_id = " + genre_id
+    cursor.execute(query)
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    url = ("/genre/id/edit_success/" + new_name + "/")
+    return redirect(url)
+
+# If cannot remove genre
+@app.route('/genre/<string:id>/edit_success/<string:new_name>/')
+def edit_genre_success(id, new_name):
+    # This first query returns only the genre name.
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre where genre.genre_id = " + id
+    cursor.execute(select_stmt)
+    genre_name= cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    # Second query finds any books in that genre
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select book.isbn, book.book_title from Books book join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where genre.genre_id = " + id
+    cursor.execute(select_stmt)
+    books_result = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('genre.html', genreinfo=genre_name, books=books_result, new_name=new_name)
+
 @app.route('/add_review', methods=['POST','GET'])
 def add_review():
     if request.method == 'GET':
