@@ -227,7 +227,10 @@ def edit_author(author_id):
     # Make sure quotes are escaped properly
     quotes = "\""
     escaped_quotes = "\\\""
+    quote = "\'"
+    escaped_quote = "\\\'"
     bio = bio.replace(quotes, escaped_quotes)
+    bio = bio.replace(quote, escaped_quote)
 
     name_string = ("'" + name + "'")
     query1 = "UPDATE Authors SET author_name = " + name_string + " WHERE author_id = " + author_id

@@ -7,10 +7,10 @@
 {% block body %}
 		<div class="content mt-4 pt-4 pb-1 mb-4">
 
-			{% if error is defined %}
+			{% if edit_success is defined %}
 			<div class="row mt-2 mb-2">
 				<ul>
-					<li class="list-group-item bg-danger text-light"><h6>Error:</h6> This Genre cannot be removed while there are still Books associated with it. Please remove or reassign each Book, then try again.</li>
+					<li class="list-group-item bg-primary text-light"><h6>Success:</h6> This Author was updated. Thank you for contributing to Paperstacks!</li>
 				</ul>
 			</div>
 			{% endif %}
@@ -20,7 +20,11 @@
 			</div>
 			<div class="row">
 				<div class="col-lg-8 mt-4">
-						<p>{{ author[0]['author_description'] }}</p>
+						{% if author[0]['author_description'] is defined %}
+							<p>{{ author[0]['author_description'] }}</p>
+						{% else %}
+							<p><i>This Author does not have a bio yet. Please consider adding one!</i></p>
+						{% endif %}
 				</div>
 			</div>
 			<div class="row mt-4 pt-1 pb-4 mb-4">
