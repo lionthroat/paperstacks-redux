@@ -3,45 +3,49 @@ import pymysql
 import pymysql.cursors
 from app import app
 from db import mysql
-from SQLsafe import fetch, stringsafe # new module, still WIP!
+from SQLsafe import fetch, db_update, stringsafe # new module, still WIP!
 from flask import Flask, Response, render_template
 from flask import request, redirect
 
+# Main page
 @app.route('/')
 def index():
-    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre order by genre.genre_name"
-    GenresSQL = fetch(select_stmt) # query 1: get genres for left sidebar links
+    select = "select genre.genre_id, genre.genre_name from Genres genre order by genre.genre_name"
+    GenresSQL = fetch(select) # query 1: get genres for left sidebar links
 
-    select_book = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id WHERE book.book_title = 'Electric Arches';"
-    featuredBookSQL = fetch(select_book) # query 2: get featured book data
+    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id WHERE book.book_title = 'Electric Arches';"
+    featuredBookSQL = fetch(select) # query 2: get featured book data
 
     return render_template('home.html', genres_list=GenresSQL, featuredbooks=featuredBookSQL)
 
+# See a list of all books
 @app.route('/books')
 def books():
-	select_stmt = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id group by book.isbn order by book.book_title ASC;"
-	result = fetch(select_stmt)
+	select = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id group by book.isbn order by book.book_title ASC;"
+	result = fetch(select)
 	return render_template('books.html', books=result)
 
+# See a book
 @app.route('/book/<string:isbn>/')
 def book(isbn):
-	select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-	BookSQL = fetch(select_stmt) # Step 1: Fetch Book's information
+    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
+    BookSQL = fetch(select) # Step 1: Fetch Book's information
 
-	select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-	ReviewSQL = fetch(select_stmt) # Step 2: Fetch Book's Reviews with Ratings
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
+    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
 
-	select_stmt = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-	RatingSQL = fetch(select_stmt) # Step 3: Fetch Book's Ratings that have no Review
+    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
+    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
 
     # Step 4: For Edit Book Modal
-	select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-	genres = fetch(select_stmt)
-	select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-	authors = fetch(select_stmt)
+    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    genres = fetch(select)
+    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    authors = fetch(select)
 
-	return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, genres=genres, authors=authors)
+    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, genres=genres, authors=authors)
 
+# Add a new book
 @app.route('/add_book', methods=['POST','GET'])
 def add_book():
     if request.method == 'GET':
@@ -96,7 +100,7 @@ def add_book():
 
         return ("Book added! <a href='/'>(back to paperstacks)</a>");
 
-# EDIT A BOOK
+# Edit a book
 @app.route('/edit_book/<string:isbn>/', methods=['POST'])
 def edit_book(isbn):
     # Update Book Title
@@ -151,20 +155,20 @@ def edit_book(isbn):
 def book_edited_successfully(isbn):
     book_edit = 1
 
-    select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    BookSQL = fetch(select_stmt) # Step 1: Fetch Book's information
+    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
+    BookSQL = fetch(select) # Step 1: Fetch Book's information
 
-    select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    ReviewSQL = fetch(select_stmt) # Step 2: Fetch Book's Reviews with Ratings
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
+    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
 
-    select_stmt = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    RatingSQL = fetch(select_stmt) # Step 3: Fetch Book's Ratings that have no Review
+    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
+    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
 
     # Step 4: For Edit Book Modal
-    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    genres = fetch(select_stmt)
-    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    authors = fetch(select_stmt)
+    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    genres = fetch(select)
+    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    authors = fetch(select)
 
     return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, book_edit=book_edit, genres=genres, authors=authors)
 
@@ -214,18 +218,21 @@ def rem_book(isbn):
     #     return redirect(url)
     return('yay, stuff')
 
+# See a list of all authors
 @app.route('/authors')
 def authors():
 	select_stmt = "select Authors.author_name, Authors.author_id from Authors order by Authors.author_name ASC;"
 	result = fetch(select_stmt)
 	return render_template('authors.html', authors=result)
 
+# See one author
 @app.route('/author/<string:author_id>/')
 def author(author_id):
 	select_stmt = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn where auth.author_id = " + author_id
 	result = fetch(select_stmt)
 	return render_template('author.html', author=result)
 
+# Add a new author
 @app.route('/add_author', methods=['POST','GET'])
 def add_author():
     if request.method == 'GET':
@@ -273,20 +280,14 @@ def add_author():
         url = ("/authors/" + str(author_id) + "/add_success/" + author_name + "/")
         return redirect(url)
 
-# ADDED AUTHOR SUCCESSFULLY
+# Author was added successfully
 @app.route('/authors/<string:author_id>/add_success/<string:author_name>/')
 def successfully_added_author(author_id, author_name):
     id = int(author_id)
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select Authors.author_name, Authors.author_id from Authors order by Authors.author_name ASC;"
-    cursor.execute(select_stmt)
-    result = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    result = fetch(select)
     return render_template('authors.html', authors=result, new_author=id, new_author_name=author_name)
 
-# EDIT AN AUTHOR
+# Edit an Author
 @app.route('/edit_author/<string:author_id>/', methods=['POST'])
 def edit_author(author_id):
     # Get modal form information
@@ -314,7 +315,7 @@ def edit_author(author_id):
     url = ("/author/" + author_id + "/edit_success/")
     return redirect(url)
 
-# SUCCESSFULLY EDITED AN AUTHOR (redisplay author page)
+# Author was edited successfully, redisplay author page.
 @app.route('/author/<string:author_id>/edit_success/')
 def successfully_edited_author(author_id):
     edit_success = 1
@@ -535,44 +536,21 @@ def rem_rating(isbn, rating_id):
 @app.route('/book/<string:isbn>/rem_rating_success/')
 def rating_removed_successfully(isbn):
     rating_rem = "The rating removal succeeded"
-    # Step 1: Fetch Book's information
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    cursor.execute(select_stmt)
-    BookSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
 
-    # Step 2: Fetch Book's Reviews with Ratings
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    cursor.execute(select_stmt)
-    ReviewSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
+    BookSQL = fetch(select) # Step 1: Fetch Book's information
 
-    # Step 3: Fetch Book's Ratings that have no Review (star rating only)
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    cursor.execute(select_stmt)
-    RatingSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
+    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
+
+    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
+    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
 
     # Step 4: For Edit Book Modal
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    cursor.execute(select_stmt)
-    genres = cursor.fetchall()
-    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    cursor.execute(select_stmt)
-    authors = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    genres = fetch(select)
+    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    authors = fetch(select)
 
     return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, rating_rem=rating_rem, genres=genres, authors=authors)
 
@@ -594,44 +572,21 @@ def rem_review(isbn, review_id):
 @app.route('/book/<string:isbn>/rem_review_success/')
 def review_removed_successfully(isbn):
     review_rem = "The review removal succeeded"
-    # Step 1: Fetch Book's information
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    cursor.execute(select_stmt)
-    BookSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
 
-    # Step 2: Fetch Book's Reviews with Ratings
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    cursor.execute(select_stmt)
-    ReviewSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
+    BookSQL = fetch(select) # Step 1: Fetch Book's information
 
-    # Step 3: Fetch Book's Ratings that have no Review (star rating only)
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    cursor.execute(select_stmt)
-    RatingSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
+    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
+
+    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
+    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
 
     # Step 4: For Edit Book Modal
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    cursor.execute(select_stmt)
-    genres = cursor.fetchall()
-    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    cursor.execute(select_stmt)
-    authors = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    genres = fetch(select)
+    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    authors = fetch(select)
 
     return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_rem=review_rem, authors=authors, genres=genres)
 
@@ -655,44 +610,21 @@ def edit_review(isbn, review_id):
 @app.route('/book/<string:isbn>/edit_rev_success/')
 def review_edit_successfully(isbn):
     review_edit = "The review edit succeeded"
-    # Step 1: Fetch Book's information
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    cursor.execute(select_stmt)
-    BookSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
 
-    # Step 2: Fetch Book's Reviews with Ratings
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    cursor.execute(select_stmt)
-    ReviewSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
+    BookSQL = fetch(select) # Step 1: Fetch Book's information
 
-    # Step 3: Fetch Book's Ratings that have no Review (star rating only)
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    cursor.execute(select_stmt)
-    RatingSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
+    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
+
+    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
+    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
 
     # Step 4: For Edit Book Modal
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    cursor.execute(select_stmt)
-    genres = cursor.fetchall()
-    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    cursor.execute(select_stmt)
-    authors = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    genres = fetch(select)
+    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    authors = fetch(select)
 
     return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_edit=review_edit, genres=genres, authors=authors)
 
@@ -753,85 +685,47 @@ def add_review():
             review_content = request.form['user_review']
             review_date = time.strftime('%Y-%m-%d')
 
-            # 4c. Connect to database and add Review
-            connection = mysql.connect()
-            cursor = connection.cursor(pymysql.cursors.DictCursor)
             query = 'INSERT INTO Reviews (review_id, rating_id, isbn, review_content, review_date) VALUES (%s,%s,%s,%s,%s)'
             values = (review_id, rating_id, isbn, review_content, review_date)
-            cursor.execute(query, values)
-            connection.commit()
-            cursor.close()
-            connection.close()
+            db_update(query, values) # 4c. Connect to database and add Review
 
             # 4d. Last, update the Rating we inserted above with FK review_id
-            connection = mysql.connect()
-            cursor = connection.cursor(pymysql.cursors.DictCursor)
             query = 'UPDATE Ratings set review_id = %s WHERE rating_id = %s'
             values = (review_id, rating_id)
-            cursor.execute(query, values)
-            connection.commit()
-            cursor.close()
-            connection.close()
+            db_update(query, values)
 
         url = ("/book/" + isbn + "/add_rev_success/")
         return redirect(url)
 
-# NEW REVIEW WAS ADDED SUCCESSFULLY
+# Review was added successfully
 @app.route('/book/<string:isbn>/add_rev_success/')
 def review_add_success(isbn):
     review_add = "The review add succeeded"
-    # Step 1: Fetch Book's information
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    cursor.execute(select_stmt)
-    BookSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
 
-    # Step 2: Fetch Book's Reviews with Ratings
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    cursor.execute(select_stmt)
-    ReviewSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
+    BookSQL = fetch(select) # Step 1: Fetch Book's information
 
-    # Step 3: Fetch Book's Ratings that have no Review (star rating only)
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    cursor.execute(select_stmt)
-    RatingSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
+    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
+
+    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
+    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
 
     # Step 4: For Edit Book Modal
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    cursor.execute(select_stmt)
-    genres = cursor.fetchall()
-    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    cursor.execute(select_stmt)
-    authors = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    genres = fetch(select)
+    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    authors = fetch(select)
 
     return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_add=review_add, genres=genres, authors=authors)
 
-# EDIT STAR RATING
+# Edit a star rating
 @app.route('/edit_rating/<string:isbn>/<string:rating_id>/', methods=['POST'])
 def edit_rating(isbn, rating_id):
     star_rating = request.form['update_rating']
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    query = "UPDATE Ratings SET star_rating = " + star_rating + " WHERE rating_id = " + rating_id
-    cursor.execute(query)
-    connection.commit()
-    cursor.close()
-    connection.close()
+    query = "UPDATE Ratings SET star_rating = %s WHERE rating_id = %s"
+    values = (star_rating, rating_id)
+    db_update(query, values)
 
     url = ("/book/" + isbn + "/edit_rating_success/")
     return redirect(url)
@@ -998,29 +892,14 @@ def search():
             else:
                 authorResult = ''
 
-            # Page display: retrieve genre data from database for search form
-            connection = mysql.connect()
-            cursor = connection.cursor(pymysql.cursors.DictCursor)
-            select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
-            cursor.execute(select_stmt)
-            GenresSQL = cursor.fetchall()
-            cursor.close()
-            connection.close()
+            select = "select genre.genre_id, genre.genre_name from Genres genre;"
+            GenresSQL = fetch(select) # Page display: retrieve genre data
 
             return render_template('search.html', search_query=search_query, genres_list=GenresSQL, books=books, authors=authorResult)
 
-
-        # search (user pressed search but didn't enter query)
-        else:
-            # retrieve genre data from database for search form
-            connection = mysql.connect()
-            cursor = connection.cursor(pymysql.cursors.DictCursor)
-            select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
-            cursor.execute(select_stmt)
-            GenresSQL = cursor.fetchall()
-            cursor.close()
-            connection.close()
-
+        else: # (user pressed search but didn't enter query)
+            select = "select genre.genre_id, genre.genre_name from Genres genre;"
+            GenresSQL = fetch(select)
             return render_template('search.html', genres=GenresSQL)
 
 @app.route('/about')
