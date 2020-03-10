@@ -7,10 +7,10 @@
 ### Recently Built Features:
 - 3/9/2020: Update an Author
 - 3/9/2020: Delete a Rating
-- 3/9/2020: Edit a Rating (via a modal)
+- 3/9/2020: Edit a Rating
 - 3/9/2020: Delete a Review
-- 3/9/2020: Edit a Review (via a modal)
-- 3/9/2020: Edit a Genre (via a modal)
+- 3/9/2020: Edit a Review
+- 3/9/2020: Edit a Genre
 - 3/8/2020: Genre Delete Validation. Before deleting a Genre from the database, there is now a preliminary SQL query that performs a COUNT(genre_id) to tally Books associated with a Genre. If this is a nonzero sum, the delete operation is aborted. The user then sees an error message as a <div> at the top of the page.
 - 3/8/2020: Genre Delete. This routing and SQL already existed, but there had been no way to use it. Now, if a user successfully deletes a Genre from the database, they will be redirected to the main Genres page, and will see a success message in a <div> at the top of the page, which confirms the name of the Genre they removed.
 - 3/7/2020: Upload Book Cover and Author Image (UI only at this point)
@@ -25,15 +25,19 @@
 - 3/7/2020: CSS fixed so that styling now passed correctly to pages with dynamically generated content. This was also an issue with a relative vs. absolute URL, and had affected the navbar and other page elements.
 
 ### Still Needs to be Built Out:
-- Update/Remove Books (soft deadline 3/9/2020)
-- Update/Remove Authors (soft deadline 3/9/2020)
+- Book: remove (soft deadline 3/9/2020)
+- Book: update (soft deadline 3/9/2020)
 - Book: link to author page(s)
 - Book: if no ratings and no reviews, state this and give user option to leave first one.
-- Book covers not fully implemented
-- Author pictures not fully implemented
-- Advanced search not completed
-- Display and search by average star rating of books
-- Search by books that have reviews
+- Book: need to be able to list multiple authors
+- Book: book covers not fully implemented
+- Book: display average star rating
+
+- Author: remove (soft deadline 3/9/2020)
+- Author: pictures not fully implemented
+
+- Search: by average star rating of books
+- Search: by books that have reviews
 - After adding a Book, Genre, Author, etc. the server returns a success message, which is a plain HTML message that takes the user away from the main site. We need to show the user a success message without seeming to depart from the site / take them away from navigation. Multiple possible options for this, including a pop-up, or a success message appended into the DOM.
 - On Add Book: need more work to be able to add New Author at the same time. Currently does not read/store information from the modal.
 - On Add Book: need additional server logic to check to see if a Book is being added without Author information (e.g. if they intend to add it later)
