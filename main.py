@@ -214,6 +214,45 @@ def add_author():
 
         return ('Author added!'); # NOTE: :( not a pretty page that displays, needs to redisplay regular website
 
+# EDIT AN AUTHOR
+@app.route('/edit_author/<string:author_id>/', methods=['POST'])
+def edit_author(author_id):
+    # Get modal form information
+    name = request.form['update_author_name']
+    bio = request.form['update_author_bio']
+
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
+    name_string = ("'" + name + "'")
+    query1 = "UPDATE Authors SET author_name = " + name_string + " WHERE author_id = " + author_id
+
+    bio_string = ("'" + bio + "'")
+    query2 = "UPDATE Authors SET author_description = " + bio_string + " WHERE author_id = " + author_id
+
+    cursor.execute(query1)
+    cursor.execute(query2)
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    url = ("/author/" + author_id + "/edit_success/")
+    return redirect(url)
+
+# SUCCESSFULLY EDITED AN AUTHOR (redisplay author page)
+@app.route('/author/<string:author_id>/edit_success')
+def successfully_edited_author(author_id):
+    edit_success = 1
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn where auth.author_id = " + author_id
+    cursor.execute(select_stmt)
+    result = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return render_template('author.html', author=result, edit_success=edit_success)
+
 @app.route('/genres')
 def genres():
     # query 1: get genre data for list

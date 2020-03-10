@@ -1,14 +1,19 @@
 # Paperstacks (Redux) Notes
-## Last updated 3/8/2020
+## Last updated 3/9/2020
 
 ### Known Bugs:
-- Reviews/Ratings displaying twice each on some Book pages. Issue with SQL to be fixed.
+- 3/9/2020: If an Author doesn't have a bio, their page will not display.
+- 3/9/2020: If an Author's bio has quotes in it, the Update function will fail because of lack of escape characters in the resulting SQL query.
 
 ### Recently Built Features:
+- 3/9/2020: Delete a Rating
+- 3/9/2020: Edit a Rating (via a modal)
+- 3/9/2020: Delete a Review
+- 3/9/2020: Edit a Review (via a modal)
+- 3/9/2020: Edit a Genre (via a modal)
 - 3/8/2020: Genre Delete Validation. Before deleting a Genre from the database, there is now a preliminary SQL query that performs a COUNT(genre_id) to tally Books associated with a Genre. If this is a nonzero sum, the delete operation is aborted. The user then sees an error message as a <div> at the top of the page.
 - 3/8/2020: Genre Delete. This routing and SQL already existed, but there had been no way to use it. Now, if a user successfully deletes a Genre from the database, they will be redirected to the main Genres page, and will see a success message in a <div> at the top of the page, which confirms the name of the Genre they removed.
-- 3/7/2020: Edit Book Modal.
-- 3/7/2020: Upload Book Cover and Author Image.
+- 3/7/2020: Upload Book Cover and Author Image (UI only at this point)
 - 3/7/2020: Advanced Search Functionality (WIP). User can now perform a search from the navigation bar (a simple keyword search), or perform a more advanced search from the Search page or home page. In the advanced search, the user has the option of using one or more of the following criteria: book title (can be a substring), author name (can be a substring), year published, ISBN-10, or genre. Additional search criteria related to ratings/reviews not yet implemented.
 
 ### Recently Fixed Bugs:
@@ -19,10 +24,10 @@
 - 3/7/2020: CSS fixed so that styling now passed correctly to pages with dynamically generated content. This was also an issue with a relative vs. absolute URL, and had affected the navbar and other page elements.
 
 ### Still Needs to be Built Out:
-- Update/Remove Ratings (soft deadline 3/9/2020)
-- Update/Remove Reviews (soft deadline 3/9/2020)
 - Update/Remove Books (soft deadline 3/9/2020)
 - Update/Remove Authors (soft deadline 3/9/2020)
+- Book: link to author page(s)
+- Book: if no ratings and no reviews, state this and give user option to leave first one.
 - Book covers not fully implemented
 - Author pictures not fully implemented
 - Advanced search not completed

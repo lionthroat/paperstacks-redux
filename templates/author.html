@@ -1,9 +1,20 @@
-<!-- This page gets a dictionary 'author' from the server with keys: -->
-<!-- [author_id, author_name, author_description, isbn, book_title ]  could use year published as well?-->
+<!-- Gets dictionary 'author' with keys: [author_id, author_name, author_description, isbn, book_title ] -->
+
+<!-- MAY get edit_success if author was updated -->
+
 {% extends 'layout.html' %}
 
 {% block body %}
 		<div class="content mt-4 pt-4 pb-1 mb-4">
+
+			{% if error is defined %}
+			<div class="row mt-2 mb-2">
+				<ul>
+					<li class="list-group-item bg-danger text-light"><h6>Error:</h6> This Genre cannot be removed while there are still Books associated with it. Please remove or reassign each Book, then try again.</li>
+				</ul>
+			</div>
+			{% endif %}
+
 			<div class="row">
 				<h4 class="name ml-4"><b>{{ author[0]['author_name'] }}</b></h4>
 			</div>
@@ -34,7 +45,7 @@
 
 		            <div class="modal-body">
 
-		                <form id="editAuthorForm" method="post" action="/edit_author/{{ author['author_id'] }}/">
+		                <form id="editAuthorForm" method="post" action="/edit_author/{{ author[0]['author_id'] }}/">
 
 		                  <label for="update_author_name">Author Name:</label>
 		                  <input type="text" name="update_author_name" id="update_author_name" class="form-control input-lg" value="{{ author[0]['author_name'] }}">
@@ -42,7 +53,7 @@
 											<label for="update_author_bio">Author Bio:</label>
         							<textarea name="update_author_bio" id="update_author_bio" rows="8" class="form-control input-lg">{{ author[0]['author_description'] }}</textarea>
 
-		                  <button id="edit-author-submit" class="btn btn-primary" type="submit">Submit</button>
+		                  <button id="edit-author-submit" class="btn btn-primary mt-2" type="submit">Submit</button>
 		                </form>
 
 		            </div>
