@@ -1,10 +1,13 @@
-# Paperstacks (Redux) Notes
+# Paperstacks Notes
 ## Last updated 3/9/2020
 
 ### Known Bugs:
 - 3/9/2020: If an Author doesn't have a bio, their page will not display.
+- 3/9/2020: Adding Authors may sometimes add them to the database twice.
 
 ### Recently Built Features:
+- 3/9/2020: New redirect after adding new Author. Goes to /authors, displays success message, and highlights new Author in list.
+- 3/9/2020: Delete an Author. Returns to /authors and displays success message.
 - 3/9/2020: Update an Author
 - 3/9/2020: Delete a Rating
 - 3/9/2020: Edit a Rating
@@ -36,6 +39,8 @@
 - Author: remove (soft deadline 3/9/2020)
 - Author: pictures not fully implemented
 
+- Authors: need modal to add new Author directly from this pages
+
 - Search: by average star rating of books
 - Search: by books that have reviews
 - After adding a Book, Genre, Author, etc. the server returns a success message, which is a plain HTML message that takes the user away from the main site. We need to show the user a success message without seeming to depart from the site / take them away from navigation. Multiple possible options for this, including a pop-up, or a success message appended into the DOM.
@@ -46,9 +51,6 @@
 - On Add Genre: Need additional validation to make sure user is not adding an existing Genre.
 - On Add Book: Need additional validation to make sure user is not adding an existing Book.
 - On Add Author: Need additional validation to make sure user is not adding an existing Author.
-
-### Known Bugs:
-- None currently
 
 ### Other Issues:
 - General styling/commenting consistency in main python application. (Heather to comment certain passages better)

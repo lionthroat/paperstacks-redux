@@ -1,6 +1,6 @@
 <!-- Gets dictionary 'author' with keys: [author_id, author_name, author_description, isbn, book_title ] -->
 
-<!-- MAY get edit_success if author was updated -->
+<!-- MAY get 'edit_success' if author was updated -->
 
 {% extends 'layout.html' %}
 
@@ -31,7 +31,8 @@
 
         <a href="#editAuthorModal" role="button" class="btn btn-primary mx-2" data-toggle="modal">Edit Author</a>
 
-				<form id="rem-author-button" action="/rem_author/{{ author['author_id'] }}" method="post">
+				<form id="rem-author-button" action="/rem_author" method="post">
+					<input type="hidden" name="author_id" value="{{ author[0]['author_id'] }}">
 					<button type="submit" id="rem-author-button" class="btn btn-primary mx-2">Remove Author</button>
 				</form>
 
