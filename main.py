@@ -224,6 +224,11 @@ def edit_author(author_id):
     connection = mysql.connect()
     cursor = connection.cursor(pymysql.cursors.DictCursor)
 
+    # Make sure quotes are escaped properly
+    quotes = "\""
+    escaped_quotes = "\\\""
+    bio = bio.replace(quotes, escaped_quotes)
+
     name_string = ("'" + name + "'")
     query1 = "UPDATE Authors SET author_name = " + name_string + " WHERE author_id = " + author_id
 

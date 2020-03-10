@@ -3,9 +3,9 @@
 
 ### Known Bugs:
 - 3/9/2020: If an Author doesn't have a bio, their page will not display.
-- 3/9/2020: If an Author's bio has quotes in it, the Update function will fail because of lack of escape characters in the resulting SQL query.
 
 ### Recently Built Features:
+- 3/9/2020: Update an Author
 - 3/9/2020: Delete a Rating
 - 3/9/2020: Edit a Rating (via a modal)
 - 3/9/2020: Delete a Review
@@ -17,6 +17,7 @@
 - 3/7/2020: Advanced Search Functionality (WIP). User can now perform a search from the navigation bar (a simple keyword search), or perform a more advanced search from the Search page or home page. In the advanced search, the user has the option of using one or more of the following criteria: book title (can be a substring), author name (can be a substring), year published, ISBN-10, or genre. Additional search criteria related to ratings/reviews not yet implemented.
 
 ### Recently Fixed Bugs:
+- 3/9/2020: If an Author's bio has quotes in it, the Update function would fail because of lack of escape characters in the resulting string and SQL query. This was fixed using Python's built in replace() function that takes three parameters in the form of: string.replace(problem_substring, fixed_substring), and iterates through the string, replacing any instances of the first string with the second. This means you can create a string: quotes = "\"" and replace it with a fixed string: escaped_quotes = "\\\"".
 - 3/8/2020: Reviews/Ratings displaying were displaying more than once because the SQL was not joining the 1:1 relationship properly between Ratings and Reviews to their associated Book, and then did not know how to handle NULL Reviews. This has been updated.
 - 3/8/2020: Links to Book pages from an Author page now working. The routing was set to the relative URL 'book/<isbn>' (which resulted in the site-breaking link format 'author/121/book/393354377'), and needed to be changed to an absolute URL '/book/<isbn>'
 - 3/8/2020: Individual Genre pages (at /genre/<id>) now display correctly even when they have no books associated with them. There needed to be additional Jinja templating
