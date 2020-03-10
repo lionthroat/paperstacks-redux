@@ -4,7 +4,6 @@ from SQLsafe import fetch, db_query, stringsafe
 from flask import Flask, Response, render_template
 from flask import request, redirect
 
-# Main page
 @app.route('/')
 def index():
     select = "select genre.genre_id, genre.genre_name from Genres genre order by genre.genre_name"
@@ -15,14 +14,12 @@ def index():
 
     return render_template('home.html', genres_list=GenresSQL, featuredbooks=featuredBookSQL)
 
-# See a list of all books
 @app.route('/books')
 def books():
 	select = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id group by book.isbn order by book.book_title ASC;"
 	result = fetch(select)
 	return render_template('books.html', books=result)
 
-# See a book
 @app.route('/book/<string:isbn>/')
 def book(isbn):
     select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
@@ -42,7 +39,6 @@ def book(isbn):
 
     return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, genres=genres, authors=authors)
 
-# Add a new book
 @app.route('/add_book', methods=['POST','GET'])
 def add_book():
     if request.method == 'GET':
@@ -82,48 +78,62 @@ def add_book():
 
         return ("Book added! <a href='/'>(back to paperstacks)</a>");
 
-# Edit a book
 @app.route('/edit_book/<string:isbn>/', methods=['POST'])
 def edit_book(isbn):
+    code = "0"
+
     # Update Book Title
     if request.form['update_title'] != '':
         title = request.form['update_title']
         title = stringsafe(title)
-        title_string = ("'" + title + "'")
         query = "UPDATE Books SET book_title = %s WHERE isbn = %s"
-        values = (title_string, isbn)
+        values = (title, isbn)
         db_query(query, values)
 
     # Update Book Description
     if request.form['update_book_description'] != '':
         description = request.form['update_book_description']
         description = stringsafe(description)  # add escape characters to single and double quotes
-        description_string = ("'" + description + "'")
         query = "UPDATE Books SET book_description = %s WHERE isbn = %s"
-        values = (description_string, isbn)
+        values = (description, isbn) # this automatically adds '' around strings. do not add manually
         db_query(query, values)
 
+    # Update Year Published
     if request.form['update_year'] != '':
         year = request.form['update_year']
         if (int(year) >= 0) and (int(year) < 2025):
             query = "UPDATE Books SET year_published = %s WHERE isbn = %s"
             values = (year, isbn)
             db_query(query, values)
+        else:
+            code = "2"
 
-    # if request.form['update_author'] != '':
-    #     authors = request.form['update_author']
+    # Update Author(s)
+    if request.form.getlist('update_author') != '':
+        authors = request.form.getlist('update_author')
+        for author in authors:
+            query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s,%s)'
+            values = (isbn, author_id)
+            db_query(query, values) # Insert one or more Books_Authors entries
 
-    # if request.form['update_genre'] != '':
-    #     genres = request.form['update_genre']
-    
-    return("updated book <a href='/'>(back to paperstacks)</a>")
-    # url = ("/book/" + isbn + "/edit_success/")
-    # return redirect(url)
+    # Update Genre(s)
+    if request.form.getlist('update_genre') != '':
+        genres = request.form.getlist('update_genre')
+        for genre in genres:
+            query = 'INSERT INTO Genres_Books (isbn, genre_id) VALUES (%s,%s)'
+            values = (isbn, genre_id)
+            db_query(query, values) # Insert one or more Genres_Books entries
 
-# BOOK EDITED SUCCESSFULLY, REDISPLAY BOOK PAGE
-@app.route('/book/<string:isbn>/edit_book_success/')
-def book_edited_successfully(isbn):
-    book_edit = 1
+    if code != "2": # If no known issues with book edit
+        code = "1" # Report book edit success
+
+    url = ("/book/" + isbn + "/update/" + code)
+    return redirect(url)
+
+# Something was changed, redisplay book page and give user message
+@app.route('/book/<string:isbn>/update/<string:code>')
+def book_updated(isbn, code):
+    code = int(code)
 
     select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
     BookSQL = fetch(select) # Step 1: Fetch Book's information
@@ -140,7 +150,7 @@ def book_edited_successfully(isbn):
     select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
     authors = fetch(select)
 
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, book_edit=book_edit, genres=genres, authors=authors)
+    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, code=code, genres=genres, authors=authors)
 
 # DELETE A BOOK - MAJOR WIP!!!!!!!
 @app.route('/rem_book/<string:isbn>/', methods=['POST'])
@@ -426,37 +436,14 @@ def edit_genre_success(id, new_name):
 # Remove a Rating
 @app.route('/rem_rating/<string:isbn>/<string:rating_id>/', methods=['POST'])
 def rem_rating(isbn, rating_id):
-
     query = "DELETE FROM Ratings WHERE Ratings.rating_id = %s"
     values = (rating_id)
     db_query(query, values)
-
-    url = ("/book/" + isbn + "/rem_rating_success/")
+    code = "23" # rating delete success code
+    url = ("/book/" + isbn + "/update/" + code)
     return redirect(url)
 
-# Rating removed, redisplay book page
-@app.route('/book/<string:isbn>/rem_rating_success/')
-def rating_removed_successfully(isbn):
-    rating_rem = "The rating removal succeeded"
-
-    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    BookSQL = fetch(select) # Step 1: Fetch Book's information
-
-    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
-
-    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
-
-    # Step 4: For Edit Book Modal
-    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    genres = fetch(select)
-    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    authors = fetch(select)
-
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, rating_rem=rating_rem, genres=genres, authors=authors)
-
-# Remove a rating
+# Remove a review
 @app.route('/rem_review/<string:isbn>/<string:review_id>/', methods=['POST'])
 def rem_review(isbn, review_id):
 
@@ -464,30 +451,9 @@ def rem_review(isbn, review_id):
     values = (review_id)
     db_query(query, values)
 
-    url = ("/book/" + isbn + "/rem_review_success/")
+    code = "17" # Review delete success code
+    url = ("/book/" + isbn + "/update/" + code)
     return redirect(url)
-
-# Review removed, redisplay book page
-@app.route('/book/<string:isbn>/rem_review_success/')
-def review_removed_successfully(isbn):
-    review_rem = "The review removal succeeded"
-
-    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    BookSQL = fetch(select) # Step 1: Fetch Book's information
-
-    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
-
-    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
-
-    # Step 4: For Edit Book Modal
-    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    genres = fetch(select)
-    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    authors = fetch(select)
-
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_rem=review_rem, authors=authors, genres=genres)
 
 # Edit review
 @app.route('/edit_review/<string:isbn>/<string:review_id>/', methods=['POST'])
@@ -499,30 +465,9 @@ def edit_review(isbn, review_id):
     values = (content_string, review_id)
     db_query(query, values)
 
-    url = ("/book/" + isbn + "/rem_review_success/")
+    code = "13" # Review edit success code
+    url = ("/book/" + isbn + "/update/" + code)
     return redirect(url)
-
-# Review edited successfully
-@app.route('/book/<string:isbn>/edit_rev_success/')
-def review_edit_successfully(isbn):
-    review_edit = "The review edit succeeded"
-
-    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    BookSQL = fetch(select) # Step 1: Fetch Book's information
-
-    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
-
-    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
-
-    # Step 4: For Edit Book Modal
-    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    genres = fetch(select)
-    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    authors = fetch(select)
-
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_edit=review_edit, genres=genres, authors=authors)
 
 # Add a new rating/review
 @app.route('/add_review', methods=['POST','GET'])
@@ -570,32 +515,11 @@ def add_review():
             values = (review_id, rating_id)
             db_query(query, values)
 
-        url = ("/book/" + isbn + "/add_rev_success/")
+        code = "15" # Review/Rating add success
+        url = ("/book/" + isbn + "/update/" + code)
         return redirect(url)
 
-# Review was added successfully
-@app.route('/book/<string:isbn>/add_rev_success/')
-def review_add_success(isbn):
-    review_add = "The review add succeeded"
-
-    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    BookSQL = fetch(select) # Step 1: Fetch Book's information
-
-    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
-
-    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
-
-    # Step 4: For Edit Book Modal
-    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    genres = fetch(select)
-    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    authors = fetch(select)
-
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_add=review_add, genres=genres, authors=authors)
-
-# Edit a star rating
+# Edit a rating
 @app.route('/edit_rating/<string:isbn>/<string:rating_id>/', methods=['POST'])
 def edit_rating(isbn, rating_id):
     star_rating = request.form['update_rating']
@@ -603,30 +527,9 @@ def edit_rating(isbn, rating_id):
     values = (star_rating, rating_id)
     db_query(query, values)
 
-    url = ("/book/" + isbn + "/edit_rating_success/")
+    code = "19" # Rating edit success code
+    url = ("/book/" + isbn + "/update/" + code)
     return redirect(url)
-
-# Rating was edited successfully
-@app.route('/book/<string:isbn>/edit_rating_success/')
-def rating_edit_successfully(isbn):
-    rating_edit = "The rating edit succeeded"
-
-    select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    BookSQL = fetch(select_stmt) # Step 1: Fetch Book's information
-
-    select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    ReviewSQL = fetch(select_stmt) # Step 2: Fetch Book's Reviews with Ratings
-
-    select_stmt = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    RatingSQL = fetch(select_stmt) # Step 3: Fetch Book's Ratings that have no Review
-
-    # Step 4: For Edit Book Modal
-    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    genres = fetch(select_stmt)
-    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    authors = fetch(select_stmt)
-
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, rating_edit=rating_edit, genres=genres, authors=authors)
 
 @app.route('/search', methods=['POST','GET'])
 def search():
