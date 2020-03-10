@@ -241,7 +241,7 @@ def edit_author(author_id):
     return redirect(url)
 
 # SUCCESSFULLY EDITED AN AUTHOR (redisplay author page)
-@app.route('/author/<string:author_id>/edit_success')
+@app.route('/author/<string:author_id>/edit_success/')
 def successfully_edited_author(author_id):
     edit_success = 1
     connection = mysql.connect()
