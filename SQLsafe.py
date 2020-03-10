@@ -1,31 +1,28 @@
 from app import app
 from flaskext.mysql import MySQL
 from db import mysql
-import time
 import pymysql
 import pymysql.cursors
-from flask import Flask, Response, render_template
-from flask import request, redirect
 
-def fetch(query = None, query_params = ()):
+# Doesn't take parameters, returns a string or dictionary
+def fetch(query = None):
     connection = mysql.connect()
     cursor = connection.cursor(pymysql.cursors.DictCursor)
-    cursor.execute(query, query_params)
+    cursor.execute(query)
     connection.commit() # equivalent of saving database changes
     dictionary = cursor.fetchall()
     cursor.close()
     connection.close()
-
     return dictionary
 
-def db_update(query = None, params = ()):
+# Must have parameters, executes a db change, returns nothing
+def db_query(query = None, params = ()):
     connection = mysql.connect()
     cursor = connection.cursor(pymysql.cursors.DictCursor)
     cursor.execute(query, params)
     connection.commit() # equivalent of saving database changes
     cursor.close()
     connection.close()
-
     return
 
 def stringsafe(string):
