@@ -3,106 +3,54 @@ import pymysql
 import pymysql.cursors
 from app import app
 from db import mysql
+from SQLsafe import fetch, stringsafe # new module, still WIP!
 from flask import Flask, Response, render_template
 from flask import request, redirect
 
 @app.route('/')
 def index():
-    # query 1: get genre data for left sidebar links
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre order by genre.genre_name;"
-    cursor.execute(select_stmt)
-    GenresSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre order by genre.genre_name"
+    GenresSQL = fetch(select_stmt) # query 1: get genres for left sidebar links
 
-    # query 2: get featured book data (NOTE: maybe there is a way to randomize this?)
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
     select_book = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id WHERE book.book_title = 'Electric Arches';"
-    cursor.execute(select_book)
-    featuredBookSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    featuredBookSQL = fetch(select_book) # query 2: get featured book data
 
     return render_template('home.html', genres_list=GenresSQL, featuredbooks=featuredBookSQL)
 
 @app.route('/books')
 def books():
-	connection = mysql.connect()
-	cursor = connection.cursor(pymysql.cursors.DictCursor)
 	select_stmt = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id group by book.isbn order by book.book_title ASC;"
-    # Note: groups by isbn so books with multiple authors only display once, however, only one author is shown.
-	cursor.execute(select_stmt)
-	result = cursor.fetchall()
-	cursor.close()
-	connection.close()
+	result = fetch(select_stmt)
 	return render_template('books.html', books=result)
 
 @app.route('/book/<string:isbn>/')
 def book(isbn):
-    # Step 1: Fetch Book's information
-	connection = mysql.connect()
-	cursor = connection.cursor(pymysql.cursors.DictCursor)
 	select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-	cursor.execute(select_stmt)
-	BookSQL = cursor.fetchall()
-	cursor.close()
-	connection.close()
+	BookSQL = fetch(select_stmt) # Step 1: Fetch Book's information
 
-    # Step 2: Fetch Book's Reviews with Ratings
-	connection = mysql.connect()
-	cursor = connection.cursor(pymysql.cursors.DictCursor)
 	select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-	cursor.execute(select_stmt)
-	ReviewSQL = cursor.fetchall()
-	cursor.close()
-	connection.close()
+	ReviewSQL = fetch(select_stmt) # Step 2: Fetch Book's Reviews with Ratings
 
-    # Step 3: Fetch Book's Ratings that have no Review (star rating only)
-	connection = mysql.connect()
-	cursor = connection.cursor(pymysql.cursors.DictCursor)
 	select_stmt = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-	cursor.execute(select_stmt)
-	RatingSQL = cursor.fetchall()
-	cursor.close()
-	connection.close()
+	RatingSQL = fetch(select_stmt) # Step 3: Fetch Book's Ratings that have no Review
 
     # Step 4: For Edit Book Modal
-	connection = mysql.connect()
-	cursor = connection.cursor(pymysql.cursors.DictCursor)
 	select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-	cursor.execute(select_stmt)
-	genres = cursor.fetchall()
+	genres = fetch(select_stmt)
 	select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-	cursor.execute(select_stmt)
-	authors = cursor.fetchall()
-	cursor.close()
-	connection.close()
+	authors = fetch(select_stmt)
 
 	return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, genres=genres, authors=authors)
 
 @app.route('/add_book', methods=['POST','GET'])
 def add_book():
     if request.method == 'GET':
-        # Get Genres information
-        connection = mysql.connect()
-        cursor = connection.cursor(pymysql.cursors.DictCursor)
         select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
-        cursor.execute(select_stmt)
-        GenresSQL = cursor.fetchall()
-        cursor.close()
-        connection.close()
+        GenresSQL = fetch(select_stmt) # Get Genres information
 
-        # Get Current Authors information
-        connection = mysql.connect()
-        cursor = connection.cursor(pymysql.cursors.DictCursor)
         select_stmt = "select auth.author_id, auth.author_name from Authors auth;"
-        cursor.execute(select_stmt)
-        AuthorsSQL = cursor.fetchall()
-        cursor.close()
-        connection.close()
+        AuthorsSQL = fetch(select_stmt) # Get Current Authors information
+
         return render_template('add_book.html', genres=GenresSQL, authors=AuthorsSQL)
 
     elif request.method == 'POST':
@@ -146,23 +94,17 @@ def add_book():
             cursor.close()
             connection.close()
 
-        return ('Book added!');
+        return ("Book added! <a href='/'>(back to paperstacks)</a>");
 
 # EDIT A BOOK
 @app.route('/edit_book/<string:isbn>/', methods=['POST'])
 def edit_book(isbn):
-    quotes = "\""
-    escaped_quotes = "\\\""
-    quote = "\'"
-    escaped_quote = "\\\'"
-
     # Update Book Title
     if request.form['update_title'] != '':
         title = request.form['update_title']
         connection = mysql.connect()
         cursor = connection.cursor(pymysql.cursors.DictCursor)
-        title = title.replace(quotes, escaped_quotes)
-        title = title.replace(quote, escaped_quote)
+        title = stringsafe(title)
         title_string = ("'" + title + "'")
         query = "UPDATE Books SET book_title = " + title_string + " WHERE isbn = " + isbn
         cursor.execute(query)
@@ -175,8 +117,7 @@ def edit_book(isbn):
         description = request.form['update_book_description']
         connection = mysql.connect()
         cursor = connection.cursor(pymysql.cursors.DictCursor)
-        description = description.replace(quotes, escaped_quotes)
-        description = description.replace(quote, escaped_quote)
+        description = stringsafe(description)  # add escape characters to single and double quotes
         description_string = ("'" + description + "'")
         query = "UPDATE Books SET book_description = " + description_string + " WHERE isbn = " + isbn
         cursor.execute(query)
@@ -190,7 +131,6 @@ def edit_book(isbn):
             connection = mysql.connect()
             cursor = connection.cursor(pymysql.cursors.DictCursor)
             query = "UPDATE Books SET year_published = " + year + " WHERE isbn = " + isbn
-            print(query)
             cursor.execute(query)
             connection.commit()
             cursor.close()
@@ -202,7 +142,7 @@ def edit_book(isbn):
     # if request.form['update_genre'] != '':
     #     genres = request.form['update_genre']
 
-    return("yay did stuff")
+    return("updated book <a href='/'>(back to paperstacks)</a>")
     # url = ("/book/" + isbn + "/edit_success/")
     # return redirect(url)
 
@@ -210,79 +150,87 @@ def edit_book(isbn):
 @app.route('/book/<string:isbn>/edit_book_success/')
 def book_edited_successfully(isbn):
     book_edit = 1
-    # Step 1: Fetch Book's information
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
     select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    cursor.execute(select_stmt)
-    BookSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    BookSQL = fetch(select_stmt) # Step 1: Fetch Book's information
 
-    # Step 2: Fetch Book's Reviews with Ratings
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
     select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    cursor.execute(select_stmt)
-    ReviewSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    ReviewSQL = fetch(select_stmt) # Step 2: Fetch Book's Reviews with Ratings
 
-    # Step 3: Fetch Book's Ratings that have no Review (star rating only)
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
     select_stmt = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    cursor.execute(select_stmt)
-    RatingSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    RatingSQL = fetch(select_stmt) # Step 3: Fetch Book's Ratings that have no Review
 
     # Step 4: For Edit Book Modal
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
     select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    cursor.execute(select_stmt)
-    genres = cursor.fetchall()
+    genres = fetch(select_stmt)
     select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    cursor.execute(select_stmt)
-    authors = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    authors = fetch(select_stmt)
 
     return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, book_edit=book_edit, genres=genres, authors=authors)
 
+# DELETE A BOOK
+@app.route('/rem_book/<string:isbn>/', methods=['POST'])
+def rem_book(isbn):
+
+    # Before removing a Book, check to make sure no Authors would be left without at least one Book
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    query = "SELECT COUNT(genre.genre_id) AS `count` FROM Genres genre JOIN Genres_Books gb ON gb.genre_id = genre.genre_id JOIN Books book ON gb.isbn = book.isbn WHERE genre.genre_id = " + id
+    cursor.execute(query)
+    result = cursor.fetchall()
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    # if there ARE books still in the genre
+    # if result[0]['count'] != 0:
+    #     url = ("/book/" + isbn + "/" + "error/")
+    #     return redirect(url)
+
+    # Delete Book
+    # else:
+    #     # get the name of the Genre we're removing
+    #     connection = mysql.connect()
+    #     cursor = connection.cursor(pymysql.cursors.DictCursor)
+    #     select_stmt = "select genre.genre_name from Genres genre where genre.genre_id = " + id
+    #     cursor.execute(select_stmt)
+    #     result = cursor.fetchall()
+    #     genre_to_remove = result[0]['genre_name']
+    #     cursor.close()
+    #     connection.close()
+    #
+    #     # delete the Genre
+    #     connection = mysql.connect()
+    #     cursor = connection.cursor(pymysql.cursors.DictCursor)
+    #     query = "DELETE FROM Genres WHERE Genres.genre_id = " + id
+    #     cursor.execute(query)
+    #     connection.commit()
+    #     cursor.close()
+    #     connection.close()
+    #
+    #     # tell the user which Genre they have successfully removed,
+    #     # and take them back to the main Genres page
+    #     url = ("/genres/rem_success/" + genre_to_remove + "/")
+    #     return redirect(url)
+    return('yay, stuff')
+
 @app.route('/authors')
 def authors():
-	connection = mysql.connect()
-	cursor = connection.cursor(pymysql.cursors.DictCursor)
 	select_stmt = "select Authors.author_name, Authors.author_id from Authors order by Authors.author_name ASC;"
-	cursor.execute(select_stmt)
-	result = cursor.fetchall()
-	cursor.close()
-	connection.close()
+	result = fetch(select_stmt)
 	return render_template('authors.html', authors=result)
 
 @app.route('/author/<string:author_id>/')
 def author(author_id):
-	connection = mysql.connect()
-	cursor = connection.cursor(pymysql.cursors.DictCursor)
 	select_stmt = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn where auth.author_id = " + author_id
-	cursor.execute(select_stmt)
-	result = cursor.fetchall()
-	cursor.close()
-	connection.close()
+	result = fetch(select_stmt)
 	return render_template('author.html', author=result)
 
 @app.route('/add_author', methods=['POST','GET'])
 def add_author():
     if request.method == 'GET':
-        connection = mysql.connect()
-        cursor = connection.cursor(pymysql.cursors.DictCursor)
         select_stmt = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
-        cursor.execute(select_stmt)
-        result = cursor.fetchall()
-        cursor.close()
-        connection.close()
+        result = fetch(select_stmt)
         return render_template('add_author.html', books=result)
 
     elif request.method == 'POST':
@@ -348,13 +296,7 @@ def edit_author(author_id):
     connection = mysql.connect()
     cursor = connection.cursor(pymysql.cursors.DictCursor)
 
-    # Make sure quotes are escaped properly
-    quotes = "\""
-    escaped_quotes = "\\\""
-    quote = "\'"
-    escaped_quote = "\\\'"
-    bio = bio.replace(quotes, escaped_quotes)
-    bio = bio.replace(quote, escaped_quote)
+    bio = stringsafe(bio) # add escape characters to single and double quotes
 
     name_string = ("'" + name + "'")
     query1 = "UPDATE Authors SET author_name = " + name_string + " WHERE author_id = " + author_id
@@ -376,13 +318,8 @@ def edit_author(author_id):
 @app.route('/author/<string:author_id>/edit_success/')
 def successfully_edited_author(author_id):
     edit_success = 1
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn where auth.author_id = " + author_id
-    cursor.execute(select_stmt)
-    result = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn where auth.author_id = " + author_id
+    result = fetch(select)
     return render_template('author.html', author=result, edit_success=edit_success)
 
 # REMOVE AN AUTHOR
@@ -407,34 +344,18 @@ def rem_author():
 @app.route('/authors/rem_success')
 def successfully_deleted_author():
     rem_success = 1
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select Authors.author_name, Authors.author_id from Authors order by Authors.author_name ASC;"
-    cursor.execute(select_stmt)
-    result = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select Authors.author_name, Authors.author_id from Authors order by Authors.author_name ASC;"
+    result = fetch(select)
     return render_template('authors.html', authors=result, rem_success=rem_success)
 
 @app.route('/genres')
 def genres():
-    # query 1: get genre data for list
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
-    cursor.execute(select_stmt)
-    GenresSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select genre.genre_id, genre.genre_name from Genres genre;"
+    GenresSQL = fetch(select) # query 1: get genre data for list
 
-    # query 2: get books data to list books in each genre category
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, book.book_title, gb.genre_id FROM Books book JOIN Genres_Books gb ON gb.isbn = book.isbn"
-    cursor.execute(select_stmt)
-    BooksSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select book.isbn, book.book_title, gb.genre_id FROM Books book JOIN Genres_Books gb ON gb.isbn = book.isbn"
+    BooksSQL = fetch(select) # query 2: list books in each genre
+
     return render_template('genres.html', genres=GenresSQL, books=BooksSQL)
 
 @app.route('/genre/<string:id>/')
@@ -510,7 +431,7 @@ def add_genre():
         cursor.close()
         connection.close()
 
-        return ('Genre added!'); # NOTE: :( not a pretty page that displays, needs to redisplay regular website
+        return ("Genre added! <a href='/'>(back to paperstacks)</a>"); # NOTE: :( not a pretty page that displays, needs to redisplay regular website
 
 @app.route('/rem_genre/<string:id>/', methods=['POST'])
 def rem_genre(id):
@@ -559,23 +480,13 @@ def rem_genre(id):
 
 @app.route('/genres/rem_success/<string:genre_name>/')
 def successfully_deleted_genre(genre_name):
-    # query 1: get genre data for list
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
-    cursor.execute(select_stmt)
-    GenresSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
 
-    # query 2: get books data to list books in each genre category
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, book.book_title, gb.genre_id FROM Books book JOIN Genres_Books gb ON gb.isbn = book.isbn"
-    cursor.execute(select_stmt)
-    BooksSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select genre.genre_id, genre.genre_name from Genres genre;"
+    GenresSQL = fetch(select) # query 1: get genre data for list
+
+    select = "select book.isbn, book.book_title, gb.genre_id FROM Books book JOIN Genres_Books gb ON gb.isbn = book.isbn"
+    BooksSQL = fetch(select) # query 2: books in each genre
+
     return render_template('genres.html', genres=GenresSQL, books=BooksSQL, rem_success=genre_name)
 
 @app.route('/edit_genre/<string:genre_id>/', methods=['POST'])
@@ -597,26 +508,16 @@ def edit_genre(genre_id):
 # Successfully updated Genre name
 @app.route('/genre/<string:id>/edit_success/<string:new_name>/')
 def edit_genre_success(id, new_name):
-    # This first query returns only the genre name.
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select genre.genre_id, genre.genre_name from Genres genre where genre.genre_id = " + id
-    cursor.execute(select_stmt)
-    genre_name= cursor.fetchall()
-    cursor.close()
-    connection.close()
 
-    # Second query finds any books in that genre
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-    select_stmt = "select book.isbn, book.book_title from Books book join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where genre.genre_id = " + id
-    cursor.execute(select_stmt)
-    books_result = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    select = "select genre.genre_id, genre.genre_name from Genres genre where genre.genre_id = " + id
+    genre_name = fetch(select) # returns only the genre name.
+
+    select = "select book.isbn, book.book_title from Books book join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where genre.genre_id = " + id
+    books_result = fetch(select) # Second query finds any books in that genre
+
     return render_template('genre.html', genreinfo=genre_name, books=books_result, new_name=new_name)
 
-# REMOVE A RATING
+# Remove a Rating
 @app.route('/rem_rating/<string:isbn>/<string:rating_id>/', methods=['POST'])
 def rem_rating(isbn, rating_id):
     connection = mysql.connect()
@@ -935,61 +836,33 @@ def edit_rating(isbn, rating_id):
     url = ("/book/" + isbn + "/edit_rating_success/")
     return redirect(url)
 
-# RATING WAS EDITED SUCCESSFULLY
+# Rating was edited successfully
 @app.route('/book/<string:isbn>/edit_rating_success/')
 def rating_edit_successfully(isbn):
     rating_edit = "The rating edit succeeded"
-    # Step 1: Fetch Book's information
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
     select_stmt = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    cursor.execute(select_stmt)
-    BookSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    BookSQL = fetch(select_stmt) # Step 1: Fetch Book's information
 
-    # Step 2: Fetch Book's Reviews with Ratings
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
     select_stmt = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    cursor.execute(select_stmt)
-    ReviewSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    ReviewSQL = fetch(select_stmt) # Step 2: Fetch Book's Reviews with Ratings
 
-    # Step 3: Fetch Book's Ratings that have no Review (star rating only)
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
     select_stmt = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    cursor.execute(select_stmt)
-    RatingSQL = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    RatingSQL = fetch(select_stmt) # Step 3: Fetch Book's Ratings that have no Review
 
     # Step 4: For Edit Book Modal
-    connection = mysql.connect()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
     select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    cursor.execute(select_stmt)
-    genres = cursor.fetchall()
+    genres = fetch(select_stmt)
     select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    cursor.execute(select_stmt)
-    authors = cursor.fetchall()
-    cursor.close()
-    connection.close()
+    authors = fetch(select_stmt)
 
     return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, rating_edit=rating_edit, genres=genres, authors=authors)
 
 @app.route('/search', methods=['POST','GET'])
 def search():
     if request.method == 'GET':
-        connection = mysql.connect()
-        cursor = connection.cursor(pymysql.cursors.DictCursor)
-        select_stmt = "select genre.genre_id, genre.genre_name from Genres genre;"
-        cursor.execute(select_stmt)
-        GenresSQL = cursor.fetchall()
-        cursor.close()
-        connection.close()
+        select = "select genre.genre_id, genre.genre_name from Genres genre;"
+        GenresSQL = fetch(select)
         return render_template('search.html', genres_list=GenresSQL)
 
     elif request.method == 'POST':
