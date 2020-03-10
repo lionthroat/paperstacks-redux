@@ -5,71 +5,23 @@
 
 <!-- For Edit Book Modal: -->
 <!-- Gets dictionary 'authors' with keys: [author_id, author_name] -->
-<!-- Gets dictioanry 'genres' with keys: [genre_id, genre_name] -->
+<!-- Gets dictionary 'genres' with keys: [genre_id, genre_name] -->
 
-<!-- For POST method success and fdilure messages: -->
-<!-- MAY receive 'rating_rem' if user just removed a Rating -->
-<!-- MAY receive 'review_rem' if user just removed a Review -->
-<!-- MAY receive 'review_edit' if user just upated a Review -->
-<!-- MAY receive 'rating_edit' if user just upated a Rating -->
-<!-- MAY receive 'review_add' if user just left a new Rating or Review for this Book -->
-<!-- MAY receive 'edit_success' if user just edited this Book -->
+<!-- May get 'code_msg' string for POST method success and failure notices -->
 
-<!-- Issues: -->
 <!-- Need additional logic to display multiple authors -->
-<!-- May need additional logic or different SQL to display reviews without ratings and vice versa -->
 
 {% extends 'layout.html' %}
 
 {% block body %}
   <div class="jumbotron text-center mt-4">
 
-    {% if edit_success is defined %}
-    <div class="row mt-2 mb-2">
-      <ul>
-        <li class="list-group-item bg-primary text-light px-4"><h6>Success!</h6> Book has been updated.</li>
-      </ul>
-    </div>
-    {% endif %}
-
-    {% if review_add is defined %}
-    <div class="row mt-2 mb-2">
-      <ul>
-        <li class="list-group-item bg-success text-light px-4"><h6>Thank you!</h6> Reviews and Ratings make Paperstacks a better site.</li>
-      </ul>
-    </div>
-    {% endif %}
-
-    {% if rating_edit is defined %}
-    <div class="row mt-2 mb-2">
-      <ul>
-        <li class="list-group-item bg-primary text-light"><h6>Success:</h6> The selected item was changed or removed.</li>
-      </ul>
-    </div>
-    {% endif %}
-
-    {% if rating_rem is defined %}
-    <div class="row mt-2 mb-2">
-      <ul>
-        <li class="list-group-item bg-primary text-light"><h6>Success:</h6> The selected item was changed or removed.</li>
-      </ul>
-    </div>
-    {% endif %}
-
-    {% if review_rem is defined %}
-    <div class="row mt-2 mb-2">
-      <ul>
-        <li class="list-group-item bg-primary text-light"><h6>Success:</h6> The selected item was changed or removed.</li>
-      </ul>
-    </div>
-    {% endif %}
-
-    {% if review_edit is defined %}
-    <div class="row mt-2 mb-2">
-      <ul>
-        <li class="list-group-item bg-primary text-light"><h6>Success:</h6> The selected item was changed or removed.</li>
-      </ul>
-    </div>
+    {% if code_msg is defined %}
+      <div class="row mt-2 mb-2">
+        <ul>
+          <li class="list-group-item bg-primary text-light px-4">{{ code_msg }}</li>
+        </ul>
+      </div>
     {% endif %}
 
     <!-- <div class="col">

@@ -4,6 +4,9 @@ from SQLsafe import fetch, db_query, stringsafe
 from flask import Flask, Response, render_template
 from flask import request, redirect
 
+from code_msgs import Messages
+Messages = Messages()
+
 @app.route('/')
 def index():
     select = "select genre.genre_id, genre.genre_name from Genres genre order by genre.genre_name"
@@ -76,7 +79,9 @@ def add_book():
             values = (isbn, genre_id)
             db_query(query, values) # Step 4: Insert one or more Genres_Books entries
 
-        return ("Book added! <a href='/'>(back to paperstacks)</a>");
+        code = "3" # Add book success code
+        url = ("/book/" + isbn + "/update/" + code)
+        return redirect(url)
 
 @app.route('/edit_book/<string:isbn>/', methods=['POST'])
 def edit_book(isbn):
@@ -134,6 +139,7 @@ def edit_book(isbn):
 @app.route('/book/<string:isbn>/update/<string:code>')
 def book_updated(isbn, code):
     code = int(code)
+    code_msg = Messages[code]
 
     select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
     BookSQL = fetch(select) # Step 1: Fetch Book's information
@@ -150,7 +156,7 @@ def book_updated(isbn, code):
     select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
     authors = fetch(select)
 
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, code=code, genres=genres, authors=authors)
+    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, code=code, genres=genres, authors=authors, code_msg=code_msg)
 
 # DELETE A BOOK - MAJOR WIP!!!!!!!
 @app.route('/rem_book/<string:isbn>/', methods=['POST'])
