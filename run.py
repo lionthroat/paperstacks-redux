@@ -115,7 +115,7 @@ def edit_book(isbn):
 
     # if request.form['update_genre'] != '':
     #     genres = request.form['update_genre']
-
+    
     return("updated book <a href='/'>(back to paperstacks)</a>")
     # url = ("/book/" + isbn + "/edit_success/")
     # return redirect(url)
