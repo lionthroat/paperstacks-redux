@@ -69,7 +69,19 @@ def book(isbn):
 	cursor.close()
 	connection.close()
 
-	return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL)
+    # Step 4: For Edit Book Modal
+	connection = mysql.connect()
+	cursor = connection.cursor(pymysql.cursors.DictCursor)
+	select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+	cursor.execute(select_stmt)
+	genres = cursor.fetchall()
+	select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+	cursor.execute(select_stmt)
+	authors = cursor.fetchall()
+	cursor.close()
+	connection.close()
+
+	return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, genres=genres, authors=authors)
 
 @app.route('/add_book', methods=['POST','GET'])
 def add_book():
@@ -546,7 +558,19 @@ def rating_removed_successfully(isbn):
     cursor.close()
     connection.close()
 
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, rating_rem=rating_rem)
+    # Step 4: For Edit Book Modal
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    cursor.execute(select_stmt)
+    genres = cursor.fetchall()
+    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    cursor.execute(select_stmt)
+    authors = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, rating_rem=rating_rem, genres=genres, authors=authors)
 
 # REMOVE A RATING
 @app.route('/rem_review/<string:isbn>/<string:review_id>/', methods=['POST'])
@@ -593,7 +617,19 @@ def review_removed_successfully(isbn):
     cursor.close()
     connection.close()
 
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_rem=review_rem)
+    # Step 4: For Edit Book Modal
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    cursor.execute(select_stmt)
+    genres = cursor.fetchall()
+    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    cursor.execute(select_stmt)
+    authors = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_rem=review_rem, authors=authors, genres=genres)
 
 # EDIT REVIEW CONTENT
 @app.route('/edit_review/<string:isbn>/<string:review_id>/', methods=['POST'])
@@ -642,7 +678,19 @@ def review_edit_successfully(isbn):
     cursor.close()
     connection.close()
 
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_edit=review_edit)
+    # Step 4: For Edit Book Modal
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    cursor.execute(select_stmt)
+    genres = cursor.fetchall()
+    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    cursor.execute(select_stmt)
+    authors = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_edit=review_edit, genres=genres, authors=authors)
 
 @app.route('/add_review', methods=['POST','GET'])
 def add_review():
@@ -755,7 +803,19 @@ def review_add_success(isbn):
     cursor.close()
     connection.close()
 
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_add=review_add)
+    # Step 4: For Edit Book Modal
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    cursor.execute(select_stmt)
+    genres = cursor.fetchall()
+    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    cursor.execute(select_stmt)
+    authors = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, review_add=review_add, genres=genres, authors=authors)
 
 # EDIT STAR RATING
 @app.route('/edit_rating/<string:isbn>/<string:rating_id>/', methods=['POST'])
@@ -803,7 +863,19 @@ def rating_edit_successfully(isbn):
     cursor.close()
     connection.close()
 
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, rating_edit=rating_edit)
+    # Step 4: For Edit Book Modal
+    connection = mysql.connect()
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+    select_stmt = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    cursor.execute(select_stmt)
+    genres = cursor.fetchall()
+    select_stmt = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    cursor.execute(select_stmt)
+    authors = cursor.fetchall()
+    cursor.close()
+    connection.close()
+
+    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, rating_edit=rating_edit, genres=genres, authors=authors)
 
 @app.route('/search', methods=['POST','GET'])
 def search():

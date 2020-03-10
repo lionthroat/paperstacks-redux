@@ -17,6 +17,15 @@
 
 textarea { height: 200px; }
 
+/* Important part */
+.modal-dialog{
+    overflow-y: initial !important
+}
+.modal-body{
+    height: 250px;
+    overflow-y: auto;
+}
+
 .nav-item {
 	font-weight: bold;
 	margin-left: 4px;
