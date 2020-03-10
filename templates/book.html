@@ -105,7 +105,7 @@
 
               <div class="form-group mt-2">
                 <label for="update_author">Update Author(s) - select none to leave same</label>
-                <select multiple class="form-control" name="update_author">
+                <select multiple class="form-control" name="update_author" data-max-options="5">
                   {% for author in authors %}
                   <!-- will do this kind of thing to pre-select current authors:
                   https://python-forum.io/Thread-How-do-I-fetch-values-from-db-to-Select-Options-using-Flask-->
@@ -116,15 +116,19 @@
 
               <div class="form-group">
                 <label for="book_genre">Update Genre(s) - select none to leave same</label>
-                <select multiple class="form-control" name="book_genre" id="book_genre">
+                <select multiple class="form-control" name="book_genre" id="book_genre" data-max-options="5">
                 {% for genre in genres %}
                   <option value="{{ genre['genre_id'] }}">{{ genre['genre_name'] }}</option>
                 {% endfor %}
                 </select>
               </div>
-              <label for="update_year">Year Published:</label>
+              <label for="update_year">Update Year Published:</label>
               <input type="text" name="update_year" class="form-control" value="{{ book['year_published'] }}">
-            </div>
+
+              <label for="update_book_description" class="mt-2">Update Book Description:</label>
+              <textarea name="update_book_description" id="update_book_description" rows="8" class="form-control input-lg">{{ book['book_description'] }}</textarea>
+            </div><!-- end of modal body -->
+
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
               <button type="button" class="btn btn-primary" onclick="" data-dismiss="modal">Save Changes</button>
