@@ -1,10 +1,11 @@
 # Paperstacks Notes
-## Last updated 3/10/2020
+## Last updated 3/11/2020
 
 ### Known Bugs:
-- 3/9/2020: Adding Authors may sometimes add them to the database twice.
+- ISBN-10 is currently treated as an int, but this regularly exceeds the maximum integer value, causing issues with adding books.
 
 ### Recently Built Features:
+- 3/11/2020: Delete Book Functionality.
 - 3/10/2020: Search by whether a book has Reviews. This checkbox is found on main page and search page, and can be used in combination with other search criteria.
 - 3/10/2020: Search By Average Ratings. Note: This is currently implemented to round ratings to their integer average, and search for ONLY the selected rating, not that and higher. E.g. If you search for Romance books with an average 3 star rating, it will only return 3-star averages, not 3 stars and above. This may be refined later.
 - 3/10/2020: Average Ratings. On /book, if there is at least one star rating, an average will be calculated. A rounded integer is used to map the average to an appropriate number of whole stars to display, and a float is used to tell the user the more precise average, (e.g. 4 stars shown, followed by more specific breakdown: '3.82/5 from 12 ratings')
@@ -34,20 +35,9 @@
 - 3/7/2020: CSS fixed so that styling now passed correctly to pages with dynamically generated content. This was also an issue with a relative vs. absolute URL, and had affected the navbar and other page elements.
 
 ### Still Needs to be Built Out:
-- Book: remove
-- Book: update author(s) and genre(s)
-- Book: need to be able to list multiple authors
 - Book: book covers not fully implemented
-
-- Author: remove (soft deadline 3/9/2020)
 - Author: pictures not fully implemented
-
 - Authors: need modal to add new Author directly from this pages
-
-- On Add Book: need more work to be able to add New Author at the same time. Currently does not read/store information from the modal.
-- On Add Book: need additional server logic to check to see if a Book is being added without Author information (e.g. if they intend to add it later)
-- On Add Book: need additional validation to see if user is attempting to add a Book that already exists. This screws up the insert so that other Book data may not be inserted correctly alongside the Book entry.
-- On See All Books and individual Book pages, only one Author displays, even when there are multiple Authors. On Books, this is because I grouped by ISBN. Just needs to be tweaked, and Jinja code added to the HTML to display multiple authors when present. Logic can be copied from the Author page, where multiple books by same Author are shown.
-- On Add Genre: Need additional validation to make sure user is not adding an existing Genre.
-- On Add Book: Need additional validation to make sure user is not adding an existing Book.
-- On Add Author: Need additional validation to make sure user is not adding an existing Author.
+- Add Book: be able to add Author at same time
+- Insert validation: Check to see if entries are already in database
+- Books: list multiple authors for a Book
