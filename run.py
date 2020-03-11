@@ -24,9 +24,13 @@ def index():
 
 @app.route('/books')
 def books():
-	select = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id group by book.isbn order by book.book_title ASC;"
-	result = fetch(select)
-	return render_template('books.html', books=result)
+    select = "SELECT Books.isbn, Books.book_title FROM Books WHERE NOT EXISTS(SELECT isbn FROM Books_Authors WHERE Books_Authors.isbn=Books.isbn)"
+    orphans = fetch(select) # Get all Books without Authors and put them in their own dictionary, otherwise they won't display
+
+    select = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id order by book.book_title ASC"
+    books = fetch(select)
+
+    return render_template('books.html', books=books, orphans=orphans)
 
 @app.route('/book/<string:isbn>/')
 def book(isbn):
