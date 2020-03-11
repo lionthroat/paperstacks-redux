@@ -6,6 +6,7 @@
 - 3/9/2020: Adding Authors may sometimes add them to the database twice.
 
 ### Recently Built Features:
+- 3/10/2020: Search By Average Ratings. Note: This is currently implemented to round ratings to their integer average, and search for ONLY the selected rating, not that and higher. E.g. If you search for Romance books with an average 3 star rating, it will only return 3-star averages, not 3 stars and above. This may be refined later.
 - 3/10/2020: Average Ratings. On /book, if there is at least one star rating, an average will be calculated. A rounded integer is used to map the average to an appropriate number of whole stars to display, and a float is used to tell the user the more precise average, (e.g. 4 stars shown, followed by more specific breakdown: '3.82/5 from 12 ratings')
 - 3/10/2020: Close Notifications. A user can now close notifications that are reporting status codes. (This JavaScript and HTML currently only on /book, to be rolled out on other pages)
 - 3/10/2020: SQL Status Codes. These were added to simplify user notification of database query outcome. This is implemented using the list in code_msgs.py. Each index in this list contains the description of a "code". E.g. Code 15 represents 'Review add success' and says 'Thank you! Reviews and Ratings make Paperstacks a better site.' These codes can easily be passed in as view function arguments on the routing page to display notifications to the user.

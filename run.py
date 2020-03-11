@@ -606,7 +606,7 @@ def search():
                     search_query = "Title: " + title
                 else: # else we added a star rating filter first
                     title_select = " AND book.book_title LIKE " + ("'%" + title + "%'")
-                    search_query = ", Title: " + title
+                    search_query = search_query + ", Title: " + title
 
                 select_stmt = select_stmt + title_select
                 query_num += 1
@@ -657,7 +657,7 @@ def search():
 
             if rating_flag == 0:
                 select_stmt = select_stmt + " GROUP BY book.isbn"
-                
+
             select_stmt = select_stmt + " ORDER BY book.book_title ASC"
 
             print("Search SQL: ", select_stmt)
