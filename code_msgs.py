@@ -3,10 +3,10 @@ def Messages():
         'No action taken', # Code 0: No action
         'Success! Book has been updated.', # Code 1: Book edit success
         'Book edit fail', # Code 2: Book edit fail
-        'Book add success', # Code 3: Book add success
-        'Book add fail', # Code 4: Book add fail
-        'Book delete success', # Code 5: Book delete success
-        'Book delete fail', # Code 6: Book delete fail
+        'Success! The book was added to Paperstacks. Thanks for your contribution!', # Code 3: Book add success
+        'Error: Book was not added successfully. This may be because the ISBN-10 is already registered to a book entry on Paperstacks. Please search for books before attempting to add them.', # Code 4: Book add fail
+        'Success: The book was deleted from Paperstacks! (But why did you want to? Remember, you can always edit and existing book!)', # Code 5: Book delete success
+        'Error: Cannot delete this book, as it will leave one or more authors not associated to a book. Authors must have at least one book on Paperstacks. You may choose to delete the author first.', # Code 6: Book delete fail
         'Author edit success', # Code 7: Author edit success
         'Author edit fail', # Code 8: Author edit fail
         'Author add success', # Code 9: Author add success

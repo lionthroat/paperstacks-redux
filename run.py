@@ -220,9 +220,9 @@ def authors():
 # See one author
 @app.route('/author/<string:author_id>/')
 def author(author_id):
-	select = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn where auth.author_id = " + author_id
-	result = fetch(select)
-	return render_template('author.html', author=result)
+    select = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn where auth.author_id = " + author_id
+    author = fetch(select)
+    return render_template('author.html', author=author)
 
 # Add a new author
 @app.route('/add_author', methods=['POST','GET'])

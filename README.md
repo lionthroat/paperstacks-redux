@@ -34,9 +34,8 @@
 - 3/7/2020: CSS fixed so that styling now passed correctly to pages with dynamically generated content. This was also an issue with a relative vs. absolute URL, and had affected the navbar and other page elements.
 
 ### Still Needs to be Built Out:
-- Book: remove (soft deadline 3/9/2020)
-- Book: update (soft deadline 3/9/2020)
-- Book: link to author page(s)
+- Book: remove
+- Book: update author(s) and genre(s)
 - Book: need to be able to list multiple authors
 - Book: book covers not fully implemented
 
@@ -45,9 +44,6 @@
 
 - Authors: need modal to add new Author directly from this pages
 
-- Search: by average star rating of books
-- Search: by books that have reviews
-- After adding a Book, Genre, Author, etc. the server returns a success message, which is a plain HTML message that takes the user away from the main site. We need to show the user a success message without seeming to depart from the site / take them away from navigation. Multiple possible options for this, including a pop-up, or a success message appended into the DOM.
 - On Add Book: need more work to be able to add New Author at the same time. Currently does not read/store information from the modal.
 - On Add Book: need additional server logic to check to see if a Book is being added without Author information (e.g. if they intend to add it later)
 - On Add Book: need additional validation to see if user is attempting to add a Book that already exists. This screws up the insert so that other Book data may not be inserted correctly alongside the Book entry.
