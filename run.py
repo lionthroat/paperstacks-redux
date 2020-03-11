@@ -208,18 +208,26 @@ def edit_book(isbn):
     url = ("/book/" + isbn + "/update/" + code)
     return redirect(url)
 
-# DELETE A BOOK - MAJOR WIP!!!!!!!
+# Delete a book
 @app.route('/rem_book/<string:isbn>/', methods=['POST'])
 def rem_book(isbn):
 
     # Before removing a Book, check to make sure no Authors would be left without at least one Book
-    select = "SELECT COUNT(genre.genre_id) AS `count` FROM Genres genre JOIN Genres_Books gb ON gb.genre_id = genre.genre_id JOIN Books book ON gb.isbn = book.isbn WHERE genre.genre_id = " + id
-    result = fetch(select)
 
-    # if there ARE books still in the genre
-    # if result[0]['count'] != 0:
-    #     url = ("/book/" + isbn + "/" + "error/")
-    #     return redirect(url)
+    # Step 1: Get the list of authors for this book
+    select = "SELECT ba.author_id from Books_Authors ba where ba.isbn = " + isbn
+    author_ids = fetch(select)
+
+    # Step 2: For all authors listed on this book, see how many books they have in the database. If any of them only have 1 book counted, that means they would be left without books if this one were removed, so the removal needs to be aborted and the user notified of the reason.
+    for author in author_ids:
+        auth = str(author['author_id'])
+        select = "SELECT COUNT(ba.isbn) AS `book_count` FROM Books_Authors ba WHERE ba.author_id = " + auth
+        result = fetch(select)
+        # If author only has one book, abort and redirect
+        if result[0]['book_count'] == 1:
+            code = "6"
+            url = ("/book/" + isbn + "/update/" + code)
+            return redirect(url)
 
     # Delete Book
     # else:
@@ -246,7 +254,7 @@ def rem_book(isbn):
     #     # and take them back to the main Genres page
     #     url = ("/genres/rem_success/" + genre_to_remove + "/")
     #     return redirect(url)
-    return('yay, stuff')
+    return('yay, I\'m like, totally gonna delete this book')
 
 # See a list of all authors
 @app.route('/authors')

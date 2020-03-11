@@ -87,9 +87,13 @@
     </div>
       <p class="text-left"> {{ bookresult[0]['book_description'] }}</p>
 
-      <div>
-        <a href="#" id="edit-book-button" class="btn btn-secondary mx-2" data-toggle="modal" data-target="#edit-book-modal" >Edit Book</a>
-      <button id="rem-book-button" class="btn btn-secondary mx-2">Remove Book</button>
+      <div class="row">
+        <a href="#" id="edit-book-button" class="btn-sm btn-secondary mx-2" data-toggle="modal" data-target="#edit-book-modal">Edit Book</a>
+
+        <form id="rem-book-button" action="/rem_book/{{ bookresult[0]['isbn'] }}" method="post">
+          <button type="submit" id="rem-book-button" class="btn-sm btn-secondary mx-2">Remove Book</a>
+        </form>
+
       </div>
 
       <div class="modal hide fade" tabindex="-1" role="dialog" area-labelledby="Edit Book" area-hidden="true" id="edit-book-modal">
@@ -236,17 +240,13 @@
             </div>
           </div><!-- End of Edit Review Modal and Form -->
 
-          <a href="#edit-rating-modal" role="button" class="btn btn-secondary mx-2" data-toggle="modal">Edit Rating</a>
+          <div class="row"><!-- Div for all the buttons -->
+            <a href="#edit-rating-modal" role="button" class="btn-sm btn-secondary mx-2" data-toggle="modal">Edit Rating</a>
+            <a href="#edit-review-modal" role="button" class="btn-sm btn-secondary mx-2" data-toggle="modal">Edit Review</a>
+            <form id="rem-review-button" action="/rem_review/{{ review['isbn'] }}/{{ review['review_id'] }}" method="post"><button type="submit" id="rem-review-button" class="btn-sm btn-outline-secondary mx-2">Remove Review</button></form>
+            <form id="rem-rating-button" action="/rem_rating/{{ review['isbn'] }}/{{ review['rating_id'] }}" method="post"><button id="rem-rating-button-1" class="btn-sm btn-outline-secondary mx-2">Remove Rating</button</form>
+          </div><!-- end of buttons row-->
 
-          <form id="rem-rating-button" action="/rem_rating/{{ review['isbn'] }}/{{ review['rating_id'] }}" method="post">
-            <button type="submit" id="rem-rating-button-1" class="btn btn-secondary mx-2">Remove Rating</button>
-          </form>
-
-          <a href="#edit-review-modal" role="button" class="btn btn-secondary mx-2" data-toggle="modal">Edit Review</a>
-
-          <form id="rem-review-button" action="/rem_review/{{ review['isbn'] }}/{{ review['review_id'] }}" method="post">
-            <button type="submit" id="rem-review-button" class="btn btn-secondary mx-2">Remove Review</button>
-          </form>
         </div>
 
         <hr />
@@ -308,10 +308,10 @@
             </div>
           </div><!-- end of edit rating modal (for ratings without reviews) -->
 
-          <a href="#edit-rating-modal-2" role="button" class="btn btn-secondary mx-2" data-toggle="modal">Edit Rating</a>
+          <a href="#edit-rating-modal-2" role="button" class="btn-sm btn-outline-secondary mx-2" data-toggle="modal">Edit Rating</a>
 
           <form id="rem-rating-button-2" action="/rem_rating/{{ rating['isbn'] }}/{{ rating['rating_id'] }}" method="post">
-            <button type="submit" id="rem-rating-button-2" class="btn btn-secondary mx-2">Remove Rating</button>
+            <button type="submit" id="rem-rating-button-2" class="btn-sm btn-outline-secondary mx-2">Remove Rating</button>
           </form>
 
         </div>
