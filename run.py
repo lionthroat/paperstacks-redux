@@ -148,49 +148,48 @@ def add_book():
 def edit_book(isbn):
     code = "0"
 
-    # # Update Book Title
-    # if request.form['update_title'] != '':
-    #     title = request.form['update_title']
-    #     title = stringsafe(title)
-    #     query = "UPDATE Books SET book_title = %s WHERE isbn = %s"
-    #     values = (title, isbn)
-    #     db_query(query, values)
-    #
-    # # Update Book Description
-    # if request.form['update_book_description'] != '':
-    #     description = request.form['update_book_description']
-    #     description = stringsafe(description)  # add escape characters to single and double quotes
-    #     query = "UPDATE Books SET book_description = %s WHERE isbn = %s"
-    #     values = (description, isbn) # this automatically adds '' around strings. do not add manually
-    #     db_query(query, values)
-    #
-    # # Update Year Published
-    # if request.form['update_year'] != '':
-    #     year = request.form['update_year']
-    #     if (int(year) >= 0) and (int(year) < 2025):
-    #         query = "UPDATE Books SET year_published = %s WHERE isbn = %s"
-    #         values = (year, isbn)
-    #         db_query(query, values)
-    #     else:
-    #         code = "2"
+    # Update Book Title
+    if request.form['update_title'] != '':
+        title = request.form['update_title']
+        title = stringsafe(title)
+        query = "UPDATE Books SET book_title = %s WHERE isbn = %s"
+        values = (title, isbn)
+        db_query(query, values)
+
+    # Update Book Description
+    if request.form['update_book_description'] != '':
+        description = request.form['update_book_description']
+        description = stringsafe(description)  # add escape characters to single and double quotes
+        query = "UPDATE Books SET book_description = %s WHERE isbn = %s"
+        values = (description, isbn) # this automatically adds '' around strings. do not add manually
+        db_query(query, values)
+
+    # Update Year Published
+    if request.form['update_year'] != '':
+        year = request.form['update_year']
+        if (int(year) >= 0) and (int(year) < 2025):
+            query = "UPDATE Books SET year_published = %s WHERE isbn = %s"
+            values = (year, isbn)
+            db_query(query, values)
+        else:
+            code = "2"
 
     # Update Author(s)
-    if request.form.getlist('update_author') != '':
-        # # Delete all previous Books_Authors entries first, so there are no orphans
-        # query = "DELETE FROM Books_Authors WHERE Books_Authors.isbn = %s"
-        # values = (isbn)
-        # db_query(query, values)
+    if len(request.form.getlist('update_author')) != 0:
+        # Delete all previous Books_Authors entries first, so there are no orphans
+        query = "DELETE FROM Books_Authors WHERE Books_Authors.isbn = %s"
+        values = (isbn)
+        db_query(query, values)
 
         # Then get our new list
         authors = request.form.getlist('update_author')
         for author_id in authors:
-            print(author_id)
-            # query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s,%s)'
-            # values = (isbn, author_id)
-            # db_query(query, values) # Insert one or more Books_Authors entries
+            query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s,%s)'
+            values = (isbn, author_id)
+            db_query(query, values) # Insert one or more Books_Authors entries
 
     # Update Genre(s)
-    if request.form.getlist('update_genre') != '':
+    if len(request.form.getlist('update_genre')) != 0:
         # Delete all previous Genres_Books entries first, so there are no orphans
         query = "DELETE FROM Genres_Books WHERE Genres_Books.isbn = %s"
         values = (isbn)

@@ -77,11 +77,10 @@
         {% endif %}
 
         <b>Genre(s):</b>
-              {% for genre in bookresult %}
-                {{ genre['genre_name'] }}
-                  {% if not loop.last %}, {% endif %}
-              {% endfor%}
-              <br>
+              {% for genre in bookresult|map(attribute='genre_name')|unique|list %}
+                {{ genre }}
+                {% if not loop.last %}, {% endif %}
+              {% endfor%}<br>
         <b>Year Published:</b> {{ bookresult[0]['year_published'] }}<br>
         <b>ISBN:</b> {{ bookresult[0]['isbn'] }}
       </p>
