@@ -1,11 +1,15 @@
 # Paperstacks Notes
-## Last updated 3/9/2020
+## Last updated 3/10/2020
 
 ### Known Bugs:
 - 3/9/2020: If an Author doesn't have a bio, their page will not display.
 - 3/9/2020: Adding Authors may sometimes add them to the database twice.
 
 ### Recently Built Features:
+- 3/10/2020: Average Ratings. On /book, if there is at least one star rating, an average will be calculated. A rounded integer is used to map the average to an appropriate number of whole stars to display, and a float is used to tell the user the more precise average, (e.g. 4 stars shown, followed by more specific breakdown: '3.82/5 from 12 ratings')
+- 3/10/2020: Close Notifications. A user can now close notifications that are reporting status codes. (This JavaScript and HTML currently only on /book, to be rolled out on other pages)
+- 3/10/2020: SQL Status Codes. These were added to simplify user notification of database query outcome. This is implemented using the list in code_msgs.py. Each index in this list contains the description of a "code". E.g. Code 15 represents 'Review add success' and says 'Thank you! Reviews and Ratings make Paperstacks a better site.' These codes can easily be passed in as view function arguments on the routing page to display notifications to the user.
+- 3/10/2020: SQLsafe. Routing in run.py has been modularized, reducing it from ~1250 lines to ~650 lines of code. This was implemented with new module SQLsafe (still a WIP), which processes two types of SQL queries: basic fetch (takes no parameters, returns string or dictionary), and database update (takes query and parameters, commits changes, has no return type); additionally, SQLsafe can process strings using stringsafe() so that all appropriate escape characters are added to single and double quotes. E.g. if you were submitting a book description that contains blurbs or reviews in quotes, or any text with apostrophes (single quotes), these quotes would break the SQL query and crash the website when trying to insert if they weren't processed to add in escape characters first.
 - 3/9/2020: New redirect after adding new Author. Goes to /authors, displays success message, and highlights new Author in list.
 - 3/9/2020: Delete an Author. Returns to /authors and displays success message.
 - 3/9/2020: Update an Author
@@ -31,10 +35,8 @@
 - Book: remove (soft deadline 3/9/2020)
 - Book: update (soft deadline 3/9/2020)
 - Book: link to author page(s)
-- Book: if no ratings and no reviews, state this and give user option to leave first one.
 - Book: need to be able to list multiple authors
 - Book: book covers not fully implemented
-- Book: display average star rating
 
 - Author: remove (soft deadline 3/9/2020)
 - Author: pictures not fully implemented
@@ -51,7 +53,3 @@
 - On Add Genre: Need additional validation to make sure user is not adding an existing Genre.
 - On Add Book: Need additional validation to make sure user is not adding an existing Book.
 - On Add Author: Need additional validation to make sure user is not adding an existing Author.
-
-### Other Issues:
-- General styling/commenting consistency in main python application. (Heather to comment certain passages better)
-- Does the connection to db actually need to be closed after each query is executed within a view, or can we combine multiple actions that occur within the same function? This would save on a lot of lines of code, but if it allows data to get corrupt or is a security concern, then it needs to be left as is. Need to research best practices.
