@@ -28,19 +28,54 @@ def book(isbn):
     select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
     BookSQL = fetch(select) # Step 1: Fetch Book's information
 
+    select = "SELECT AVG(star_rating) AS `average_rating`, COUNT(rate.rating_id) AS `rating_count` FROM Ratings rate WHERE rate.isbn = " + isbn
+    AvgRatingSQL = fetch(select) # Step 2: Get Avg Rating (float avg, total # of ratings)
+    float_avg = round(AvgRatingSQL[0]['average_rating'], 2)
+    int_avg = round(AvgRatingSQL[0]['average_rating'])
+    rating_count = AvgRatingSQL[0]['rating_count']
+
     select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
+    ReviewSQL = fetch(select) # Step 3: Fetch Book's Reviews with Ratings
 
     select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
+    RatingSQL = fetch(select) # Step 4: Fetch Book's Ratings that have no Review
 
-    # Step 4: For Edit Book Modal
+    # Step 5: For Edit Book Modal
     select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
     genres = fetch(select)
     select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
     authors = fetch(select)
 
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, genres=genres, authors=authors)
+    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, genres=genres, authors=authors, rating_count=rating_count, int_avg=int_avg, float_avg=float_avg)
+
+# Something was changed, redisplay book page and give user message
+@app.route('/book/<string:isbn>/update/<string:code>')
+def book_updated(isbn, code):
+    code = int(code)
+    code_msg = Messages[code]
+
+    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
+    BookSQL = fetch(select) # Step 1: Fetch Book's information
+
+    select = "SELECT AVG(star_rating) AS `average_rating`, COUNT(rate.rating_id) AS `rating_count` FROM Ratings rate WHERE rate.isbn = " + isbn
+    AvgRatingSQL = fetch(select) # Step 2: Get Avg Rating (float avg, total # of ratings)
+    float_avg = round(AvgRatingSQL[0]['average_rating'], 2)
+    int_avg = round(AvgRatingSQL[0]['average_rating'])
+    rating_count = AvgRatingSQL[0]['rating_count']
+
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
+    ReviewSQL = fetch(select) # Step 3: Fetch Book's Reviews with Ratings
+
+    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
+    RatingSQL = fetch(select) # Step 4: Fetch Book's Ratings that have no Review
+
+    # Step 5: For Edit Book Modal
+    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
+    genres = fetch(select)
+    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
+    authors = fetch(select)
+
+    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, code=code, genres=genres, authors=authors, code_msg=code_msg, rating_count=rating_count, int_avg=int_avg, float_avg=float_avg)
 
 @app.route('/add_book', methods=['POST','GET'])
 def add_book():
@@ -134,29 +169,6 @@ def edit_book(isbn):
 
     url = ("/book/" + isbn + "/update/" + code)
     return redirect(url)
-
-# Something was changed, redisplay book page and give user message
-@app.route('/book/<string:isbn>/update/<string:code>')
-def book_updated(isbn, code):
-    code = int(code)
-    code_msg = Messages[code]
-
-    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
-    BookSQL = fetch(select) # Step 1: Fetch Book's information
-
-    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    ReviewSQL = fetch(select) # Step 2: Fetch Book's Reviews with Ratings
-
-    select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    RatingSQL = fetch(select) # Step 3: Fetch Book's Ratings that have no Review
-
-    # Step 4: For Edit Book Modal
-    select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
-    genres = fetch(select)
-    select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
-    authors = fetch(select)
-
-    return render_template('book.html', bookresult=BookSQL, reviews=ReviewSQL, ratings=RatingSQL, code=code, genres=genres, authors=authors, code_msg=code_msg)
 
 # DELETE A BOOK - MAJOR WIP!!!!!!!
 @app.route('/rem_book/<string:isbn>/', methods=['POST'])

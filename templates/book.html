@@ -3,6 +3,9 @@
 <!-- Gets dictionary 'reviews' with keys: [isbn, rating_id, review_id, star_rating, rating_date, review_content] -->
 <!-- Gets dictionary 'ratings' with keys: [isbn, rating_id, review_id, star_rating, rating_date] -->
 
+<!-- If there are any star ratings: -->
+<!-- Gets strings: 'int_avg', 'float_avg', 'rating_count' -->
+
 <!-- For Edit Book Modal: -->
 <!-- Gets dictionary 'authors' with keys: [author_id, author_name] -->
 <!-- Gets dictionary 'genres' with keys: [genre_id, genre_name] -->
@@ -49,6 +52,23 @@
     </div>
     <div class="row mt-4">
       <p class="text-left">
+        {% if int_avg is defined %}
+          <b>Average Rating:
+            {% if int_avg == 5 %}
+              &#9733;&#9733;&#9733;&#9733;&#9733;
+            {% elif int_avg == 4 %}
+              &#9733;&#9733;&#9733;&#9733;&#9734;
+            {% elif int_avg == 3 %}
+              &#9733;&#9733;&#9733;&#9734;&#9734;
+            {% elif int_avg == 2 %}
+              &#9733;&#9733;&#9734;&#9734;&#9734;
+            {% else %}
+              &#9733;&#9734;&#9734;&#9734;&#9734;
+            {% endif %}
+             stars,</b> ({{ float_avg }}/5 from {{ rating_count }} ratings)<br>
+        {% else %}
+          <b>Average Rating:</b> (not enough ratings to calculate average)<br>
+        {% endif %}
         <b>Genre:</b> {{ book['genre_name'] }}<br>
         <b>Year Published:</b> {{book['year_published'] }}<br>
         <b>ISBN:</b> {{ book['isbn'] }}
@@ -115,11 +135,6 @@
 
     {% endfor %}
 
-      <!-- Average Rating not implemented yet -->
-      <!-- <h3 class="header3"> Ratings</h3>
-      <p class="rating-content"> Average rating: [avg] out of [#] of reviews &star; &star; &star; &star; &star;
-      </p> -->
-
     <div class="row mt-4">
       <h5 class="header3 text-left mb-4">Reviews & Ratings</h5>
     </div>
@@ -127,17 +142,13 @@
         <h5 class="subheader text-left">Rating:
           {% if review['star_rating'] == 5 %}
             &#9733;&#9733;&#9733;&#9733;&#9733;
-          {% endif %}
-          {% if review['star_rating'] == 4 %}
+          {% elif review['star_rating'] == 4 %}
             &#9733;&#9733;&#9733;&#9733;&#9734;
-          {% endif %}
-          {% if review['star_rating'] == 3 %}
+          {% elif review['star_rating'] == 3 %}
             &#9733;&#9733;&#9733;&#9734;&#9734;
-          {% endif %}
-          {% if review['star_rating'] == 2 %}
+          {% elif review['star_rating'] == 2 %}
             &#9733;&#9733;&#9734;&#9734;&#9734;
-          {% endif %}
-          {% if review['star_rating'] == 1 %}
+          {% else %}
             &#9733;&#9734;&#9734;&#9734;&#9734;
           {% endif %}
         </h5>
@@ -239,17 +250,13 @@
         <h5 class="subheader text-left">Rating:
           {% if rating['star_rating'] == 5 %}
             &#9733;&#9733;&#9733;&#9733;&#9733;
-          {% endif %}
-          {% if rating['star_rating'] == 4 %}
+          {% elif rating['star_rating'] == 4 %}
             &#9733;&#9733;&#9733;&#9733;&#9734;
-          {% endif %}
-          {% if rating['star_rating'] == 3 %}
+          {% elif rating['star_rating'] == 3 %}
             &#9733;&#9733;&#9733;&#9734;&#9734;
-          {% endif %}
-          {% if rating['star_rating'] == 2 %}
+          {% elif rating['star_rating'] == 2 %}
             &#9733;&#9733;&#9734;&#9734;&#9734;
-          {% endif %}
-          {% if rating['star_rating'] == 1 %}
+          {% else %}
             &#9733;&#9734;&#9734;&#9734;&#9734;
           {% endif %}
         </h5>
