@@ -1,9 +1,29 @@
 <!-- Gets dictionary 'books' with keys: [isbn, book_title, author_name] -->
 <!-- Gets dictionary 'orphans' with keys: [isbn, book_title] -->
+<!-- May get strings 'code' and 'code_msg' -->
 {% extends 'layout.html' %}
 
 {% block body %}
 
+  {% if code_msg is defined %}
+    <div class="row mt-2 mb-2" id="notification">
+      <ul>
+        <li class="list-group-item bg-primary text-light px-4">{{ code_msg }} <button onclick="close_notification()" class="btn ml-5 text-light"><b>&times;</b></button></li>
+      </ul>
+    </div>
+  {% endif %}
+
+  <script language="javascript">
+    function close_notification() {
+      var x = document.getElementById("notification");
+      if (x.style.display === "none") {
+        x.style.display = "block";
+      } else {
+        x.style.display = "none";
+      }
+    }
+  </script>
+  
   <div class="container mt-5 mb-5">
     <h4 class="name">Books</h4>
 

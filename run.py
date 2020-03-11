@@ -32,6 +32,19 @@ def books():
 
     return render_template('books.html', books=books, orphans=orphans)
 
+@app.route('/books/<string:code>')
+def books_update(code):
+    code = int(code)
+    code_msg = Messages[code]
+
+    select = "SELECT Books.isbn, Books.book_title FROM Books WHERE NOT EXISTS(SELECT isbn FROM Books_Authors WHERE Books_Authors.isbn=Books.isbn)"
+    orphans = fetch(select) # Get all Books without Authors and put them in their own dictionary, otherwise they won't display
+
+    select = "select book.isbn, book.book_title, auth.author_name from Books book JOIN Books_Authors ba on ba.isbn = book.isbn join Authors auth ON auth.author_id = ba.author_id order by book.book_title ASC"
+    books = fetch(select)
+
+    return render_template('books.html', books=books, orphans=orphans, code=code, code_msg=code_msg)
+
 @app.route('/book/<string:isbn>/')
 def book(isbn):
     # Step 1: Fetch Book's information (Returns 1 entry per genre for the book - this is fine!)
@@ -244,32 +257,23 @@ def rem_book(isbn):
             url = ("/book/" + isbn + "/update/" + code)
             return redirect(url)
 
-    # Delete Book
-    # else:
-    #     # get the name of the Genre we're removing
-    #     connection = mysql.connect()
-    #     cursor = connection.cursor(pymysql.cursors.DictCursor)
-    #     select_stmt = "select genre.genre_name from Genres genre where genre.genre_id = " + id
-    #     cursor.execute(select_stmt)
-    #     result = cursor.fetchall()
-    #     genre_to_remove = result[0]['genre_name']
-    #     cursor.close()
-    #     connection.close()
-    #
-    #     # delete the Genre
-    #     connection = mysql.connect()
-    #     cursor = connection.cursor(pymysql.cursors.DictCursor)
-    #     query = "DELETE FROM Genres WHERE Genres.genre_id = " + id
-    #     cursor.execute(query)
-    #     connection.commit()
-    #     cursor.close()
-    #     connection.close()
-    #
-    #     # tell the user which Genre they have successfully removed,
-    #     # and take them back to the main Genres page
-    #     url = ("/genres/rem_success/" + genre_to_remove + "/")
-    #     return redirect(url)
-    return('yay, I\'m like, totally gonna delete this book')
+    # Step 3: If there were no issues with orphaned authors, delete all Books_Authors entries for this book
+    query = "DELETE FROM Books_Authors WHERE Books_Authors.isbn = %s"
+    values = (isbn)
+    db_query(query, values)
+
+    query = "DELETE FROM Genres_Books WHERE Genres_Books.isbn = %s"
+    values = (isbn)
+    db_query(query, values)
+
+    # Step 4: Finally, delete the Book
+    query = "DELETE FROM Books WHERE Books.isbn = %s"
+    values = (isbn)
+    db_query(query, values)
+
+    code = "5" # Report book delete success
+    url = ("/books/" + code)
+    return redirect(url)
 
 # See a list of all authors
 @app.route('/authors')
