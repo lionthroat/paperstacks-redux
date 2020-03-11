@@ -7,6 +7,11 @@ from flask import request, redirect
 from code_msgs import Messages
 Messages = Messages()
 
+from flaskext.mysql import MySQL
+from db import mysql
+import pymysql
+import pymysql.cursors
+
 @app.route('/')
 def index():
     select = "select genre.genre_id, genre.genre_name from Genres genre order by genre.genre_name"
@@ -26,6 +31,7 @@ def books():
 @app.route('/book/<string:isbn>/')
 def book(isbn):
     select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
+
     BookSQL = fetch(select) # Step 1: Fetch Book's information
 
     select = "SELECT AVG(star_rating) AS `average_rating`, COUNT(rate.rating_id) AS `rating_count` FROM Ratings rate WHERE rate.isbn = " + isbn
@@ -41,7 +47,7 @@ def book(isbn):
         int_avg = round(AvgRatingSQL[0]['average_rating'])
         rating_count = AvgRatingSQL[0]['rating_count']
 
-    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn
     ReviewSQL = fetch(select) # Step 3: Fetch Book's Reviews with Ratings
 
     select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
@@ -61,14 +67,21 @@ def book_updated(isbn, code):
     code = int(code)
     code_msg = Messages[code]
 
-    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn
+    select = "select book.isbn, book.book_title, book.year_published, book.book_description, auth.author_name, auth.author_id, genre.genre_name from Books book join Books_Authors ba on ba.isbn = book.isbn join Authors auth on auth.author_id = ba.author_id join Genres_Books gb on gb.isbn = book.isbn join Genres genre on genre.genre_id = gb.genre_id where book.isbn = " + isbn + " GROUP BY book.isbn"
     BookSQL = fetch(select) # Step 1: Fetch Book's information
 
     select = "SELECT AVG(star_rating) AS `average_rating`, COUNT(rate.rating_id) AS `rating_count` FROM Ratings rate WHERE rate.isbn = " + isbn
     AvgRatingSQL = fetch(select) # Step 2: Get Avg Rating (float avg, total # of ratings)
-    float_avg = round(AvgRatingSQL[0]['average_rating'], 2)
-    int_avg = round(AvgRatingSQL[0]['average_rating'])
-    rating_count = AvgRatingSQL[0]['rating_count']
+
+    # Initialize so that book.html doesn't break expecting these vars
+    float_avg = None
+    int_avg = None
+    rating_count = None
+
+    if AvgRatingSQL[0]['rating_count'] != 0:
+        float_avg = round(AvgRatingSQL[0]['average_rating'], 2)
+        int_avg = round(AvgRatingSQL[0]['average_rating'])
+        rating_count = AvgRatingSQL[0]['rating_count']
 
     select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
     ReviewSQL = fetch(select) # Step 3: Fetch Book's Reviews with Ratings
@@ -99,29 +112,35 @@ def add_book():
         # Operation 1: Fetch Book information from form
         book_title = request.form['book_title']
         isbn = request.form['book_isbn']
-        year_published = request.form['book_year']
-
+        year_published = int(request.form['book_year'])
         book_description = request.form['book_description']
         book_description = stringsafe(book_description)
 
-        genres = request.form.getlist('book_genre') # use getlist to get data from select multiple
+        genre_ids = request.form.getlist('book_genre') # use getlist to get data from select multiple
         author_ids = request.form.getlist('book_author') # use getlist for select multiple
 
-        query = 'INSERT INTO Books (isbn, book_title, year_published, book_description) VALUES (%s,%s,%s,%s)'
+        # list comprehension to turn list into ints that can be inserted
+        author_ids = list(map(int, author_ids))
+        genre_ids = list(map(int, genre_ids))
+        # results = list(map(int, results))  # functional programming solution: map list to ints
+        # results = [int(i) for i in results] # more pythonic solution: list comprehension
+
+        query = 'INSERT INTO Books (isbn, book_title, year_published, book_description) VALUES (%s, %s, %s, %s)'
         values = (isbn, book_title, year_published, book_description)
         db_query(query, values) # Step 2: Insert new Book
 
-        for author_id in author_ids:
-            query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s,%s)'
-            values = (isbn, author_id)
+        for author in author_ids:
+            query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s, %s)'
+            values = (isbn, author)
             db_query(query, values) # Step 3: Insert one or more Books_Authors entries
 
-        for genre_id in genres:
-            query = 'INSERT INTO Genres_Books (isbn, genre_id) VALUES (%s,%s)'
-            values = (isbn, genre_id)
+        for genre in genre_ids:
+            query = 'INSERT INTO Genres_Books (isbn, genre_id) VALUES (%s, %s)'
+            values = (isbn, genre)
             db_query(query, values) # Step 4: Insert one or more Genres_Books entries
 
         code = "3" # Add book success code
+        isbn = str(isbn)
         url = ("/book/" + isbn + "/update/" + code)
         return redirect(url)
 
