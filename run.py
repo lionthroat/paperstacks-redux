@@ -213,15 +213,15 @@ def rem_book(isbn):
 # See a list of all authors
 @app.route('/authors')
 def authors():
-	select_stmt = "select Authors.author_name, Authors.author_id from Authors order by Authors.author_name ASC;"
-	result = fetch(select_stmt)
+	select = "select Authors.author_name, Authors.author_id from Authors order by Authors.author_name ASC;"
+	result = fetch(select)
 	return render_template('authors.html', authors=result)
 
 # See one author
 @app.route('/author/<string:author_id>/')
 def author(author_id):
-	select_stmt = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn where auth.author_id = " + author_id
-	result = fetch(select_stmt)
+	select = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn where auth.author_id = " + author_id
+	result = fetch(select)
 	return render_template('author.html', author=result)
 
 # Add a new author
@@ -585,15 +585,28 @@ def search():
             year = request.form['search_year']
             isbn = request.form['search_isbn']
             genre = request.form['search_genre']
-
-            # advanced search operation 1: look for search term(s) in Books
-            search_string = ("'%" + title + "%'") # allows substring search from book titles
-            select_stmt = "SELECT book.isbn, book.book_title, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id JOIN Genres_Books gb on gb.isbn = book.isbn JOIN Genres genre ON genre.genre_id = gb.genre_id WHERE " # put together final query
+            rating = request.form['search_rating']
 
             query_num = 0
-            if title != '':
-                title_select = "book.book_title LIKE " + ("'%" + title + "%'")
-                search_query = "Title: " + title
+            # advanced search operation 1: look for search term(s) in Books
+            if rating == 'null':
+                select_stmt = "SELECT book.isbn, book.book_title, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id JOIN Genres_Books gb on gb.isbn = book.isbn JOIN Genres genre ON genre.genre_id = gb.genre_id WHERE " # put together final query
+                rating_flag = 0
+                # the rating_flag set to 0 tells the query it still needs to add GROUP BY at the end. If user is also searching by rating, this will already be in the query because GROUP BY breaks a query if it comes after HAVING
+            else:
+                # Note: The SQL query is structured differently if the user wants to search by average star rating. Because this category is calculated on the fly, and is not a stored attribute of any table, setting the ad hoc column `average_rating` and then searching by it will break a query if you use WHERE (e.g. WHERE average_rating = 3). This is because SQL evaluates queries backwards, from right to left, so average_rating does not exist at the time it is being referenced. To fix this, a query involving average star ratings uses HAVING, which has deferred evaluation.
+                select_stmt = "SELECT book.isbn, book.book_title, ROUND(AVG(rate.star_rating)) AS `average_rating`, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id JOIN Genres_Books gb on gb.isbn = book.isbn JOIN Genres genre ON genre.genre_id = gb.genre_id JOIN Ratings rate ON rate.isbn = book.isbn GROUP BY book.isbn HAVING average_rating = " + rating
+                search_query = "Average Rating: " + rating
+                rating_flag = 1
+                query_num += 1
+
+            if title != '': # if title search is not empty
+                if query_num == 0: # and if this is the first filter we're adding
+                    title_select = "book.book_title LIKE " + ("'%" + title + "%'")
+                    search_query = "Title: " + title
+                else: # else we added a star rating filter first
+                    title_select = " AND book.book_title LIKE " + ("'%" + title + "%'")
+                    search_query = ", Title: " + title
 
                 select_stmt = select_stmt + title_select
                 query_num += 1
@@ -642,7 +655,12 @@ def search():
                 select_stmt = select_stmt + genre_select
                 query_num += 1
 
-            select_stmt = select_stmt + " GROUP BY book.isbn ORDER BY book.book_title ASC"
+            if rating_flag == 0:
+                select_stmt = select_stmt + " GROUP BY book.isbn"
+                
+            select_stmt = select_stmt + " ORDER BY book.book_title ASC"
+
+            print("Search SQL: ", select_stmt)
             books = fetch(select_stmt)
 
             # advanced search operation 2: look for search term(s) in Authors
