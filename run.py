@@ -586,18 +586,36 @@ def search():
             isbn = request.form['search_isbn']
             genre = request.form['search_genre']
             rating = request.form['search_rating']
+            review = request.form.get('search_has_reviews')
+            query_num = 0 # count how many search criteria we have
 
-            query_num = 0
-            # advanced search operation 1: look for search term(s) in Books
-            if rating == 'null':
-                select_stmt = "SELECT book.isbn, book.book_title, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id JOIN Genres_Books gb on gb.isbn = book.isbn JOIN Genres genre ON genre.genre_id = gb.genre_id WHERE " # put together final query
-                rating_flag = 0
+            # If not searching by rating or reviews
+            if rating == 'null' and review is None:
+                # This just kicks off the search query, doesn't search for anything yet
+                select_stmt = "SELECT book.isbn, book.book_title, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id JOIN Genres_Books gb on gb.isbn = book.isbn JOIN Genres genre ON genre.genre_id = gb.genre_id WHERE "
+                having_flag = 0
                 # the rating_flag set to 0 tells the query it still needs to add GROUP BY at the end. If user is also searching by rating, this will already be in the query because GROUP BY breaks a query if it comes after HAVING
-            else:
+
+            # Else, if searching by BOTH ratings and reviews
+            elif rating != 'null' and review == 'has_reviews':
                 # Note: The SQL query is structured differently if the user wants to search by average star rating. Because this category is calculated on the fly, and is not a stored attribute of any table, setting the ad hoc column `average_rating` and then searching by it will break a query if you use WHERE (e.g. WHERE average_rating = 3). This is because SQL evaluates queries backwards, from right to left, so average_rating does not exist at the time it is being referenced. To fix this, a query involving average star ratings uses HAVING, which has deferred evaluation.
+                select_stmt = "SELECT book.isbn, book.book_title, COUNT(rev.review_id) AS `num_reviews`, ROUND(AVG(rate.star_rating)) AS `average_rating`, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id JOIN Genres_Books gb on gb.isbn = book.isbn JOIN Genres genre ON genre.genre_id = gb.genre_id JOIN Ratings rate ON rate.isbn = book.isbn JOIN Reviews rev ON rev.isbn = book.isbn GROUP BY book.isbn HAVING num_reviews > 0 AND average_rating = " + rating
+                search_query = "Has Reviews, Average Rating: " + rating
+                having_flag = 1
+                query_num += 1
+
+            # Else, if searching by only ratings, not reviews
+            elif rating != 'null' and review is None:
                 select_stmt = "SELECT book.isbn, book.book_title, ROUND(AVG(rate.star_rating)) AS `average_rating`, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id JOIN Genres_Books gb on gb.isbn = book.isbn JOIN Genres genre ON genre.genre_id = gb.genre_id JOIN Ratings rate ON rate.isbn = book.isbn GROUP BY book.isbn HAVING average_rating = " + rating
                 search_query = "Average Rating: " + rating
-                rating_flag = 1
+                having_flag = 1
+                query_num += 1
+
+            # Else, search by only whether it has reviews, not by average ratings
+            else:
+                select_stmt = "SELECT book.isbn, book.book_title, COUNT(rev.review_id) AS `num_reviews`, auth.author_id, auth.author_name FROM Books book JOIN Books_Authors ba ON ba.isbn = book.isbn JOIN Authors auth ON auth.author_id = ba.author_id JOIN Genres_Books gb on gb.isbn = book.isbn JOIN Genres genre ON genre.genre_id = gb.genre_id JOIN Reviews rev ON rev.isbn = book.isbn GROUP BY book.isbn HAVING num_reviews > 0"
+                search_query = "Has Reviews"
+                having_flag = 1
                 query_num += 1
 
             if title != '': # if title search is not empty
@@ -655,12 +673,12 @@ def search():
                 select_stmt = select_stmt + genre_select
                 query_num += 1
 
-            if rating_flag == 0:
+            if having_flag == 0:
                 select_stmt = select_stmt + " GROUP BY book.isbn"
 
             select_stmt = select_stmt + " ORDER BY book.book_title ASC"
 
-            print("Search SQL: ", select_stmt)
+            print("Search SQL:", select_stmt)
             books = fetch(select_stmt)
 
             # advanced search operation 2: look for search term(s) in Authors
