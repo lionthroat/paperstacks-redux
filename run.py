@@ -235,12 +235,12 @@ def author(author_id):
 @app.route('/add_author', methods=['POST','GET'])
 def add_author():
     if request.method == 'GET':
-        select_stmt = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
-        result = fetch(select_stmt)
+        select = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
+        result = fetch(select)
         return render_template('add_author.html', books=result)
 
     elif request.method == 'POST':
-        query = "SELECT MAX(Authors.author_id) FROM Authors"
+        select = "SELECT MAX(Authors.author_id) FROM Authors"
         result = fetch(select) # Step 1: Query to get max PK value of author_id
         author_id = result[0]['MAX(Authors.author_id)']
         author_id += 1
@@ -265,6 +265,7 @@ def add_author():
 @app.route('/authors/<string:author_id>/add_success/<string:author_name>/')
 def successfully_added_author(author_id, author_name):
     id = int(author_id)
+    select = "select auth.author_id, auth.author_name, auth.author_description, book.isbn, book.book_title from Authors auth join Books_Authors ba on ba.author_id = auth.author_id join Books book on book.isbn = ba.isbn GROUP BY auth.author_id ORDER BY auth.author_name"
     result = fetch(select)
     return render_template('authors.html', authors=result, new_author=id, new_author_name=author_name)
 
@@ -275,17 +276,15 @@ def edit_author(author_id):
     # Step 1: Update name
     name = request.form['update_author_name']
     name = stringsafe(name)
-    name_string = ("'" + name + "'")
     query = "UPDATE Authors SET author_name = %s WHERE author_id = %s"
-    values = (name_string, author_id)
+    values = (name, author_id)
     db_query(query, values)
 
     # Step 2: Update author bio
     bio = request.form['update_author_bio']
     bio = stringsafe(bio) # add escape characters to single and double quotes
-    bio_string = ("'" + bio + "'")
     query = "UPDATE Authors SET author_description = %s WHERE author_id = %s"
-    values = (bio_string, author_id)
+    values = (bio, author_id)
     db_query(query, values)
 
     url = ("/author/" + author_id + "/edit_success/")
