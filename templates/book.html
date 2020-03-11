@@ -52,7 +52,7 @@
     </div>
     <div class="row mt-4">
       <p class="text-left">
-        {% if int_avg is defined %}
+        {% if rating_count != None %}
           <b>Average Rating:
             {% if int_avg == 5 %}
               &#9733;&#9733;&#9733;&#9733;&#9733;
@@ -69,6 +69,7 @@
         {% else %}
           <b>Average Rating:</b> (not enough ratings to calculate average)<br>
         {% endif %}
+
         <b>Genre:</b> {{ book['genre_name'] }}<br>
         <b>Year Published:</b> {{book['year_published'] }}<br>
         <b>ISBN:</b> {{ book['isbn'] }}

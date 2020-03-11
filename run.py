@@ -30,9 +30,16 @@ def book(isbn):
 
     select = "SELECT AVG(star_rating) AS `average_rating`, COUNT(rate.rating_id) AS `rating_count` FROM Ratings rate WHERE rate.isbn = " + isbn
     AvgRatingSQL = fetch(select) # Step 2: Get Avg Rating (float avg, total # of ratings)
-    float_avg = round(AvgRatingSQL[0]['average_rating'], 2)
-    int_avg = round(AvgRatingSQL[0]['average_rating'])
-    rating_count = AvgRatingSQL[0]['rating_count']
+
+    # Initialize so that book.html doesn't break expecting these vars
+    float_avg = None
+    int_avg = None
+    rating_count = None
+
+    if AvgRatingSQL[0]['rating_count'] != 0:
+        float_avg = round(AvgRatingSQL[0]['average_rating'], 2)
+        int_avg = round(AvgRatingSQL[0]['average_rating'])
+        rating_count = AvgRatingSQL[0]['rating_count']
 
     select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
     ReviewSQL = fetch(select) # Step 3: Fetch Book's Reviews with Ratings
