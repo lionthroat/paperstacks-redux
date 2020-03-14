@@ -12,6 +12,11 @@ from db import mysql
 import pymysql
 import pymysql.cursors
 
+# sauce: https://www.roytuts.com/python-flask-file-upload-example/
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+def allowed_file(filename):
+	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 @app.route('/')
 def index():
     select = "select genre.genre_id, genre.genre_name from Genres genre order by genre.genre_name"
@@ -146,6 +151,9 @@ def add_book():
 
         genre_ids = request.form.getlist('book_genre') # use getlist to get data from select multiple
         author_ids = request.form.getlist('book_author') # use getlist for select multiple
+	   
+        img_file = request.files['uploadBookImg']
+        img_file.save(secure_filename(img_file.filename))
 
         # list comprehension to turn list into ints that can be inserted
         author_ids = list(map(int, author_ids))
