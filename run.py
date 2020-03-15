@@ -12,10 +12,13 @@ from db import mysql
 import pymysql
 import pymysql.cursors
 
-# sauce: https://www.roytuts.com/python-flask-file-upload-example/
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def read_file(filename):
+	with open(filename, 'rb') as f:
+		photo = f.read()
+	return photo
 
 @app.route('/')
 def index():
@@ -152,8 +155,8 @@ def add_book():
         genre_ids = request.form.getlist('book_genre') # use getlist to get data from select multiple
         author_ids = request.form.getlist('book_author') # use getlist for select multiple
 	   
-        img_file = request.files['uploadBookImg']
-        img_file.save(secure_filename(img_file.filename))
+        file = request.files['file']
+	   f = read_file(file)
 
         # list comprehension to turn list into ints that can be inserted
         author_ids = list(map(int, author_ids))
@@ -161,8 +164,8 @@ def add_book():
         # results = list(map(int, results))  # functional programming solution: map list to ints
         # results = [int(i) for i in results] # more pythonic solution: list comprehension
 
-        query = 'INSERT INTO Books (isbn, book_title, year_published, book_description) VALUES (%s, %s, %s, %s)'
-        values = (isbn, book_title, year_published, book_description)
+        query = 'INSERT INTO Books (isbn, book_title, year_published, book_description, book_img) VALUES (%s, %s, %s, %s)'
+        values = (isbn, book_title, year_published, book_description, f)
         db_query(query, values) # Step 2: Insert new Book
 
         for author in author_ids:
@@ -782,6 +785,10 @@ def privacy():
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
+
+@app.errorhandler(400)
+def page_not_found(e):
+    return render_template('400.html'), 400
 
 if __name__ == "__main__":
     app.run()
