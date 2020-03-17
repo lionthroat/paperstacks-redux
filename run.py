@@ -172,9 +172,10 @@ def add_book():
 
         # Chose New Author, add Author then add Books_Authors entries
         elif len(request.form['author_name']) != 0 and len(request.form['author_description']) != 0:
-            print("adding a new author!")
             author_name = request.form['author_name']
+            author_name = stringsafe(author_name)
             author_description = request.form['author_description']
+            author_description = stringsafe(author_name)
 
             select = "SELECT MAX(Authors.author_id) FROM Authors"
             result = fetch(select)
