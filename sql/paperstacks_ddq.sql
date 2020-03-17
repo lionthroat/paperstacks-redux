@@ -151,6 +151,7 @@ insert into `Books` (isbn, book_title, year_published, book_description) values
 
 insert into `Books_Authors` (isbn, author_id) values
   ('0385523912', 100),
+  ('0399255370', 101),
   ('0765378388', 102),
   ('1476753830', 103),
   ('1416590323', 104),
@@ -177,6 +178,7 @@ insert into `Books_Authors` (isbn, author_id) values
 
 insert into `Genres_Books` (isbn, genre_id) values
   ('0385523912', 13),
+  ('0399255370', 4),
   ('0765378388', 1),
   ('1476753830', 18),
   ('1416590323', 6),
