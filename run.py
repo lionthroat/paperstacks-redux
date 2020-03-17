@@ -69,7 +69,7 @@ def book(isbn):
         int_avg = round(AvgRatingSQL[0]['average_rating'])
         rating_count = AvgRatingSQL[0]['rating_count']
 
-    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
     ReviewSQL = fetch(select) # Step 4: Fetch Book's Reviews with Ratings
 
     select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
@@ -111,7 +111,7 @@ def book_updated(isbn, code):
         int_avg = round(AvgRatingSQL[0]['average_rating'])
         rating_count = AvgRatingSQL[0]['rating_count']
 
-    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
     ReviewSQL = fetch(select) # Step 4: Fetch Book's Reviews with Ratings
 
     select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
@@ -137,6 +137,7 @@ def add_book():
         return render_template('add_book.html', genres=GenresSQL, authors=AuthorsSQL)
 
     elif request.method == 'POST':
+        code = "0" # Status code set to default
         # Operation 1: Fetch Book information from form
         book_title = request.form['book_title']
         isbn = request.form['book_isbn']
@@ -144,30 +145,60 @@ def add_book():
         book_description = request.form['book_description']
         book_description = stringsafe(book_description)
 
-        genre_ids = request.form.getlist('book_genre') # use getlist to get data from select multiple
-        author_ids = request.form.getlist('book_author') # use getlist for select multiple
-
-        # list comprehension to turn list into ints that can be inserted
-        author_ids = list(map(int, author_ids))
-        genre_ids = list(map(int, genre_ids))
-        # results = list(map(int, results))  # functional programming solution: map list to ints
-        # results = [int(i) for i in results] # more pythonic solution: list comprehension
-
+        # Insert New Book
         query = 'INSERT INTO Books (isbn, book_title, year_published, book_description) VALUES (%s, %s, %s, %s)'
         values = (isbn, book_title, year_published, book_description)
-        db_query(query, values) # Step 2: Insert new Book
+        db_query(query, values)
 
-        for author in author_ids:
-            query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s, %s)'
-            values = (isbn, author)
-            db_query(query, values) # Step 3: Insert one or more Books_Authors entries
-
+        # Associate Book with one or more Genres, via Genres_Books entries
+        genre_ids = request.form.getlist('book_genre') # use getlist to get data from select multiple
+        genre_ids = list(map(int, genre_ids)) # list comprehension: turn into ints that can be inserted
+        # results = list(map(int, results))  # functional programming solution: map list to ints
+        # results = [int(i) for i in results] # more pythonic solution: list comprehension
         for genre in genre_ids:
             query = 'INSERT INTO Genres_Books (isbn, genre_id) VALUES (%s, %s)'
             values = (isbn, genre)
-            db_query(query, values) # Step 4: Insert one or more Genres_Books entries
+            db_query(query, values)
 
-        code = "3" # Add book success code
+        # Chose Existing Author(s), add Books_Authors entries
+        if len(request.form.getlist('book_author')) != 0:
+            author_ids = request.form.getlist('book_author') # use getlist for select multiple
+            author_ids = list(map(int, author_ids)) # list comprehension: turn into ints that can be inserted
+
+            for author in author_ids:
+                query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s, %s)'
+                values = (isbn, author)
+                db_query(query, values)
+
+        # Chose New Author, add Author then add Books_Authors entries
+        elif len(request.form['author_name']) != 0 and len(request.form['author_description']) != 0:
+            print("adding a new author!")
+            author_name = request.form['author_name']
+            author_description = request.form['author_description']
+
+            select = "SELECT MAX(Authors.author_id) FROM Authors"
+            result = fetch(select)
+            author_id = result[0]['MAX(Authors.author_id)']
+            author_id += 1
+
+            query = 'INSERT INTO Authors (author_id, author_name, author_description) VALUES (%s,%s,%s)'
+            values = (author_id, author_name, author_description)
+            db_query(query, values)
+
+            query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s,%s)'
+            values = (isbn, author_id)
+            db_query(query, values)
+
+            code = "32" # Successfully added book AND author
+
+        # Did not enter Authors, can do later
+        else:
+            print("no author")
+            code = "31" # Book added but without authors
+
+        if code == "0":
+            code = "3" # If nothing went wrong, assume success. 3 is add book success code
+
         isbn = str(isbn)
         url = ("/book/" + isbn + "/update/" + code)
         return redirect(url)

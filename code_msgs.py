@@ -30,6 +30,8 @@ def Messages():
         'Genre add success', # Code 27: Genre add success
         'Genre add fail', # Code 28: Genre add fail
         'Genre delete success', # Code 29: Genre delete success
-        'Genre delete fail' # Code 30: Genre delete fail
+        'Genre delete fail', # Code 30: Genre delete fail
+        'The book was added to Paperstacks! However, you did not select an author or did not enter all information required for adding a new author. You may edit the book or add a new author at any time.', # Code 31: Book added but without author(s)
+        'Success! You added a new book and new author to Paperstacks! Thanks for your contribution!' # Code 32: Book AND Author added success
     ]
     return messages
