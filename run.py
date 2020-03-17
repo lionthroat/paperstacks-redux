@@ -69,7 +69,7 @@ def book(isbn):
         int_avg = round(AvgRatingSQL[0]['average_rating'])
         rating_count = AvgRatingSQL[0]['rating_count']
 
-    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
     ReviewSQL = fetch(select) # Step 4: Fetch Book's Reviews with Ratings
 
     select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
@@ -111,7 +111,7 @@ def book_updated(isbn, code):
         int_avg = round(AvgRatingSQL[0]['average_rating'])
         rating_count = AvgRatingSQL[0]['rating_count']
 
-    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn
+    select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
     ReviewSQL = fetch(select) # Step 4: Fetch Book's Reviews with Ratings
 
     select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
