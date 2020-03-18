@@ -208,6 +208,56 @@ def add_book():
 def edit_book(isbn):
     code = "0"
 
+    # Update Author(s)
+    if len(request.form.getlist('update_author')) != 0:
+
+        # Get the current author list for this book
+        select = 'SELECT ba.author_id FROM Books_Authors ba WHERE ba.isbn = ' + isbn
+        current_authors = fetch(select)
+        author_list = []
+        for x in current_authors:
+            v = x['author_id']
+            author_list.append(v)
+
+        # Determine which authors may only have one book to their name in our database
+        must_have = []
+        for auth in author_list:
+            select = "SELECT COUNT(ba.isbn) AS `book_count` FROM Books_Authors ba WHERE ba.author_id = " + str(auth)
+            book_count = fetch(select)
+            count = []
+            for x in book_count:
+                v = x['book_count']
+                count.append(v)
+            if count[0] == 1:
+                must_have.append(str(auth))
+
+
+        # Then get our new author list
+        new_authors = request.form.getlist('update_author')
+
+        # Check that all authors we could be leaving without a book are in the user's new selections
+        flag = all(x in new_authors for x in must_have)
+
+        # If the author selections are acceptable, go through with editing them
+        if flag == True:
+            # Delete all previous Books_Authors entries first, so there are no orphans
+            query = "DELETE FROM Books_Authors WHERE Books_Authors.isbn = %s"
+            values = (isbn)
+            db_query(query, values)
+
+            # Insert our new list
+            authors = request.form.getlist('update_author')
+            for author_id in authors:
+                query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s,%s)'
+                values = (isbn, author_id)
+                db_query(query, values) # Insert one or more Books_Authors entries
+
+        # Else, the author selections are unacceptable, notify user and abort editing book
+        else:
+            code = "2"
+            url = ("/book/" + isbn + "/update/" + code)
+            return redirect(url)
+
     # Update Book Title
     if request.form['update_title'] != '':
         title = request.form['update_title']
@@ -232,21 +282,9 @@ def edit_book(isbn):
             values = (year, isbn)
             db_query(query, values)
         else:
-            code = "2"
-
-    # Update Author(s)
-    if len(request.form.getlist('update_author')) != 0:
-        # Delete all previous Books_Authors entries first, so there are no orphans
-        query = "DELETE FROM Books_Authors WHERE Books_Authors.isbn = %s"
-        values = (isbn)
-        db_query(query, values)
-
-        # Then get our new list
-        authors = request.form.getlist('update_author')
-        for author_id in authors:
-            query = 'INSERT INTO Books_Authors (isbn, author_id) VALUES (%s,%s)'
-            values = (isbn, author_id)
-            db_query(query, values) # Insert one or more Books_Authors entries
+            code = "33" # Invalid year input
+            url = ("/book/" + isbn + "/update/" + code)
+            return redirect(url)
 
     # Update Genre(s)
     if len(request.form.getlist('update_genre')) != 0:
@@ -262,8 +300,8 @@ def edit_book(isbn):
             values = (isbn, genre_id)
             db_query(query, values) # Insert one or more Genres_Books entries
 
-    if code != "2": # If no known issues with book edit
-        code = "1" # Report book edit success
+    if code == "0": # If no known issues with book edit thus far
+        code = "1"  # Report book edit success
 
     url = ("/book/" + isbn + "/update/" + code)
     return redirect(url)
