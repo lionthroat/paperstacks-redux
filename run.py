@@ -69,19 +69,25 @@ def book(isbn):
         int_avg = round(AvgRatingSQL[0]['average_rating'])
         rating_count = AvgRatingSQL[0]['rating_count']
 
+    # Step 4: Fetch Book's Reviews WITH Ratings
     select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    ReviewSQL = fetch(select) # Step 4: Fetch Book's Reviews with Ratings
+    ReviewRatingSQL = fetch(select)
 
+    # Step 5: Fetch Book's Ratings that have NO Review
     select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    RatingSQL = fetch(select) # Step 5: Fetch Book's Ratings that have no Review
+    RatingSQL = fetch(select)
 
-    # Step 6: For Edit Book Modal
+    # Step 6: Fetch Book's Reviews that have NO Rating
+    select = "SELECT * FROM Reviews WHERE isbn = " + isbn + " AND rating_id IS NULL"
+    ReviewSQL = fetch(select)
+
+    # Step 7: For Edit Book Modal
     select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
     all_genres = fetch(select)
     select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
     all_authors = fetch(select)
 
-    return render_template('book.html', book=book, authors=authors, reviews=ReviewSQL, ratings=RatingSQL, all_genres=all_genres, all_authors=all_authors, rating_count=rating_count, int_avg=int_avg, float_avg=float_avg)
+    return render_template('book.html', book=book, authors=authors, ratings_with_reviews=ReviewRatingSQL, reviews=ReviewSQL, ratings=RatingSQL, all_genres=all_genres, all_authors=all_authors, rating_count=rating_count, int_avg=int_avg, float_avg=float_avg)
 
 # Something was changed, redisplay book page and give user message
 @app.route('/book/<string:isbn>/update/<string:code>')
@@ -111,19 +117,25 @@ def book_updated(isbn, code):
         int_avg = round(AvgRatingSQL[0]['average_rating'])
         rating_count = AvgRatingSQL[0]['rating_count']
 
+    # Step 4: Fetch Book's Reviews WITH Ratings
     select = "select book.isbn, rate.rating_id, rate.review_id, rate.star_rating, rate.rating_date, rev.review_content from Books book join Ratings rate on rate.isbn = book.isbn join Reviews rev on rev.isbn = rate.isbn where book.isbn = " + isbn + " AND rev.rating_id = rate.rating_id AND rate.review_id = rev.review_id"
-    ReviewSQL = fetch(select) # Step 4: Fetch Book's Reviews with Ratings
+    ReviewRatingSQL = fetch(select)
 
+    # Step 5: Fetch Book's Ratings that have NO Review
     select = "SELECT * FROM Ratings WHERE isbn = " + isbn + " AND review_id IS NULL"
-    RatingSQL = fetch(select) # Step 5: Fetch Book's Ratings that have no Review
+    RatingSQL = fetch(select)
 
-    # Step 6: For Edit Book Modal
+    # Step 6: Fetch Book's Reviews that have NO Rating
+    select = "SELECT * FROM Reviews WHERE isbn = " + isbn + " AND rating_id IS NULL"
+    ReviewSQL = fetch(select)
+
+    # Step 7: For Edit Book Modal
     select = "SELECT Genres.genre_id, Genres.genre_name FROM Genres"
     all_genres = fetch(select)
     select = "SELECT Authors.author_id, Authors.author_name FROM Authors"
     all_authors = fetch(select)
 
-    return render_template('book.html', book=book, authors=authors, reviews=ReviewSQL, ratings=RatingSQL, all_genres=all_genres, all_authors=all_authors, rating_count=rating_count, int_avg=int_avg, float_avg=float_avg, code_msg=code_msg, code=code)
+    return render_template('book.html', book=book, authors=authors, reviews=ReviewSQL, ratings=RatingSQL, ratings_with_reviews=ReviewRatingSQL, all_genres=all_genres, all_authors=all_authors, rating_count=rating_count, int_avg=int_avg, float_avg=float_avg, code_msg=code_msg, code=code)
 
 @app.route('/add_book', methods=['POST','GET'])
 def add_book():
@@ -194,7 +206,6 @@ def add_book():
 
         # Did not enter Authors, can do later
         else:
-            print("no author")
             code = "31" # Book added but without authors
 
         if code == "0":
@@ -611,10 +622,10 @@ def rem_review(isbn, review_id):
 @app.route('/edit_review/<string:isbn>/<string:review_id>/', methods=['POST'])
 def edit_review(isbn, review_id):
     content = request.form['update_review_content']
-    content_string = ("'" + content + "'")
+    content = stringsafe(content)
 
-    query = "UPDATE Reviews SET review_content = %d WHERE review_id = %s"
-    values = (content_string, review_id)
+    query = "UPDATE Reviews SET review_content = %s WHERE review_id = %s"
+    values = (content, review_id)
     db_query(query, values)
 
     code = "13" # Review edit success code
@@ -635,7 +646,6 @@ def add_review():
         # Adding a Rating from this form is optional, so see if the user
         # chose to add one, or not
         if request.form['user_rating'] != 'null':
-            print("we're adding a rating with this review!")
             # Step 1: Need new rating_id PK
             select = "SELECT MAX(Ratings.rating_id) FROM Ratings"
             result = fetch(select)
@@ -651,7 +661,6 @@ def add_review():
             values = (rating_id, isbn, star_rating, rating_date)
             db_query(query, values)
         else:
-            print("this review only gets the text, not a star rating!")
             rating_id = None
 
 
