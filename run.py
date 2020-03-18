@@ -621,13 +621,73 @@ def edit_review(isbn, review_id):
     url = ("/book/" + isbn + "/update/" + code)
     return redirect(url)
 
-# Add a new rating/review
+# Add a new review
 @app.route('/add_review', methods=['POST','GET'])
 def add_review():
     if request.method == 'GET':
         select = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
         result = fetch(select)
         return render_template('add_review.html', books=result)
+
+    elif request.method == 'POST':
+        isbn = request.form['author_book']
+
+        # Adding a Rating from this form is optional, so see if the user
+        # chose to add one, or not
+        if request.form['user_rating'] != 'null':
+            print("we're adding a rating with this review!")
+            # Step 1: Need new rating_id PK
+            select = "SELECT MAX(Ratings.rating_id) FROM Ratings"
+            result = fetch(select)
+            rating_id = result[0]['MAX(Ratings.rating_id)']
+            rating_id += 1
+
+            # Step 2: Fetch form info for Rating
+            star_rating = request.form['user_rating']
+            rating_date = time.strftime('%Y-%m-%d')
+
+            # Step 3: Insert Rating, Note: review_id initially disregarded as FK to avoid insert errors
+            query = 'INSERT INTO Ratings (rating_id, isbn, star_rating, rating_date) VALUES (%s,%s,%s,%s)'
+            values = (rating_id, isbn, star_rating, rating_date)
+            db_query(query, values)
+        else:
+            print("this review only gets the text, not a star rating!")
+            rating_id = None
+
+
+        # Step 4: If Review not empty...
+        if request.form['user_review'] != '':
+            # 4a. First, need a new review_id PK for our new Review entry
+            select = "SELECT MAX(Reviews.review_id) FROM Reviews"
+            result = fetch(select)
+            review_id = result[0]['MAX(Reviews.review_id)']
+            review_id += 1
+
+            # 4b. Second, fetch Review info from form and system
+            review_content = request.form['user_review']
+            review_date = time.strftime('%Y-%m-%d')
+
+            query = 'INSERT INTO Reviews (review_id, rating_id, isbn, review_content, review_date) VALUES (%s,%s,%s,%s,%s)'
+            values = (review_id, rating_id, isbn, review_content, review_date)
+            db_query(query, values) # 4c. Connect to database and add Review
+
+            # 4d. Last, update the Rating if we inserted one above with FK review_id
+            if rating_id is not None:
+                query = 'UPDATE Ratings set review_id = %s WHERE rating_id = %s'
+                values = (review_id, rating_id)
+                db_query(query, values)
+
+        code = "15" # Review/Rating add success
+        url = ("/book/" + isbn + "/update/" + code)
+        return redirect(url)
+
+# Add a new rating
+@app.route('/add_rating', methods=['POST','GET'])
+def add_rating():
+    if request.method == 'GET':
+        select = "select book.isbn, book.book_title from Books book order by book.book_title ASC;"
+        result = fetch(select)
+        return render_template('add_rating.html', books=result)
 
     elif request.method == 'POST':
         # Step 1: Need new rating_id PK
