@@ -133,14 +133,12 @@ $("#add-author").click(function() {
 
       <div class="form-group mt-3">
         <label for="book_isbn">ISBN-10 - required</label>
-        <input type="number" name="book_isbn" class="form-control" placeholder="98735513209" required="required">
-        <!-- Below is the same input as above, but with Kayla's nifty validateISBN function! I have it commented out for now because it was being cranky with me and didn't accept even valid inputs. How rude. -->
-        <!-- <input type="number" name="book_isbn" class="form-control" placeholder="98735513209" oninput="validateISBN(this)" pattern=".{10,10}" required="required"> -->
+        <input type="number" name="book_isbn" class="form-control" placeholder="98735513209" oninput="validateISBN(this)" pattern=".{10,10}" required="required">
       </div>
 
       <div class="form-group">
         <label for="book_year">Year Published - required</label>
-        <input type="number" name="book_year" class="form-control" placeholder="2007" required="required">
+        <input type="number" name="book_year" class="form-control" placeholder="2007" required="required" oninput="validateYear(this)">
       </div>
 
       <div class="form-group">
